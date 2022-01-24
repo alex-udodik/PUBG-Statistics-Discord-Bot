@@ -15,7 +15,7 @@ module.exports = {
 
             const result = await mongodbCollection.insertOne(document);
             console.log(`A document was inserted with the _id: ${result.insertedId}`);
-            return result;
+            return result.acknowledged;
         } finally {
             await client.close();
         }
@@ -31,7 +31,7 @@ module.exports = {
             const mongodbCollection = mongodbDatabase.collection(collection);
 
             const name = await mongodbCollection.findOne(query);
-            console.log(`${query} was able to find: ${name}`);
+            console.log(query, `was able to find: `, name);
             return name;
         } finally {
             await client.close();
@@ -48,7 +48,7 @@ module.exports = {
             const mongodbCollection = mongodbDatabase.collection(collection);
 
             const name = await mongodbCollection.findOne(query, options);
-            console.log(`${query} was able to find: ${name}`);
+            console.log(query, `was able to find: `, name);
             return name;
         } finally {
             await client.close();

@@ -12,6 +12,7 @@ dotenv.config();
 const redisPort = 6379
 global.cache = redis.createClient(redisPort);
 
+
 const commands = [];
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 

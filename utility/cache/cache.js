@@ -1,7 +1,7 @@
 
 module.exports = {
 
-    verifyCache: async function(key) {
+    verifyKey: async function(key) {
         return await global.cache.get(key, (error, data) => {
             if (error) {
                 return error;
@@ -12,7 +12,7 @@ module.exports = {
         });
     },
 
-    insertCache: async function(key, value, expire) {
+    insertKey: async function(key, value, expire) {
         return await global.cache.set(key, value, {
             EX: expire,   
         });
