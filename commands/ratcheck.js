@@ -21,8 +21,18 @@ module.exports = {
         //const url = `https://api.pubg.com/shards/steam/players?filter[playerNames]=$${pubg_name}`
         //const data = await PubgAPI.fetchData(url);
         //console.log("Data: ", data);
-        const result = await Botcache.verifyCache(pubg_name)
-        console.log("Cache results: ", result);
+
+        
+        
+        const resultGet = await Botcache.verifyCache(pubg_name)
+        if (resultGet !== null) {
+            console.log("Cache results after get: ", resultGet);
+        }
+        else {
+            console.log("Key missing. Need to fetch from database");
+            const resultSet = await Botcache.insertCache(pubg_name, "123123", 10);
+        }
+       
         
         await interaction.editReply('Results');    
     }
