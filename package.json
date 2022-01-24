@@ -21,6 +21,8 @@
     "@discordjs/rest": "^0.2.0-canary.0",
     "discord-api-types": "^0.26.1",
     "discord.js": "^13.6.0",
-    "dotenv": "^14.2.0"
+    "dotenv": "^14.2.0",
+    "node-fetch": "^2.6.7",
+    "redis": "^4.0.2"
   }
 }
