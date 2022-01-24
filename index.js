@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 const redis = require("redis");
 
+
 dotenv.config();
 
 const redisPort = 6379
@@ -73,7 +74,11 @@ client.on("interactionCreate", async interaction => {
 client.login(process.env.BOT_TOKEN);
 
 (async () => {
-
     global.cache.on('error', (err) => console.log('Redis Client Error', err));
-    await global.cache.connect();
+    try {
+        await global.cache.connect();
+    } catch (error) {
+        console.log("Error: ", error);
+    }
+    
 })();
