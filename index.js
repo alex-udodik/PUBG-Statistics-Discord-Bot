@@ -5,6 +5,9 @@ const fs = require('fs');
 const dotenv = require('dotenv');
 const path = require('path');
 const redis = require("redis");
+const { MongoClient } = require('mongodb');
+
+
 
 
 dotenv.config();
@@ -75,11 +78,16 @@ client.on("interactionCreate", async interaction => {
 client.login(process.env.BOT_TOKEN);
 
 (async () => {
+    
     global.cache.on('error', (err) => console.log('Redis Client Error', err));
     try {
         await global.cache.connect();
+
+        const mongodbURI = `mongodb+srv://***REMOVED***:${process.env.MONGO_DB_PASSWORD}@clusterdev0.pcdo6.mongodb.net/test`;
+        
+        global.mongodb = new MongoClient(mongodbURI);
+        await global.mongodb.connect();
     } catch (error) {
         console.log("Error: ", error);
     }
-    
 })();
