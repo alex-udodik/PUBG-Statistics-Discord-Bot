@@ -11,7 +11,7 @@ module.exports = {
         .setDescription('Shows the rat rating for lifetime stats of a pubg player')
         .addStringOption(option =>
             option
-                .setName('pubg-ign')
+                .setName('names')
                 .setDescription('Case-sensitive for 1st-time names! Example: DallasCowboy')
                 .setRequired(true)
         ),
@@ -22,7 +22,7 @@ module.exports = {
 
         await interaction.deferReply({ ephemeral: true });
 
-        const pubg_name = interaction.options.getString('pubg-ign');
+        const pubg_name = interaction.options.getString('names');
         const names = pubg_name.split(/[ ,]+/)
         console.log("Names: ", names);
         console.log(`Checking cache for: ${pubg_name.toLowerCase()}`);
