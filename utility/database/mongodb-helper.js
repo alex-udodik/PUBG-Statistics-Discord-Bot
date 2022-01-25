@@ -1,11 +1,12 @@
-
+const MongoDBSingleton = require('./mongodb-singleton');
 
 module.exports = {
 
     insertOne: async function (database, collection, document) {
         try {
         
-            const mongodbDatabase = global.mongodb.db(database);
+            const databaseInstance = MongoDBSingleton.getInstance()
+            const mongodbDatabase = databaseInstance.db(database);
             const mongodbCollection = mongodbDatabase.collection(collection);
 
             const result = await mongodbCollection.insertOne(document);
@@ -19,7 +20,8 @@ module.exports = {
     findOne: async function (database, collection, query) {
         try {
             
-            const mongodbDatabase = global.mongodb.db(database);
+            const databaseInstance = MongoDBSingleton.getInstance()
+            const mongodbDatabase = databaseInstance.db(database);
             const mongodbCollection = mongodbDatabase.collection(collection);
 
             const name = await mongodbCollection.findOne(query);
@@ -33,7 +35,8 @@ module.exports = {
     findOne: async function (database, collection, query, options) {
         try {
             
-            const mongodbDatabase = global.mongodb.db(database);
+            const databaseInstance = MongoDBSingleton.getInstance()
+            const mongodbDatabase = databaseInstance.db(database);
             const mongodbCollection = mongodbDatabase.collection(collection);
 
             const name = await mongodbCollection.findOne(query, options);
