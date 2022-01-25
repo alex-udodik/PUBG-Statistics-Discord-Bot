@@ -17,4 +17,6 @@ module.exports = {
             EX: expire,   
         });
     },
+
+    TTL: 1800,
 }
