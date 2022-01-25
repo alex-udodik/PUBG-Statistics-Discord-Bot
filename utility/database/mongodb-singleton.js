@@ -18,7 +18,7 @@ var MongoDBSingleton = (function () {
                 instance = createInstance();
             }
 
-            console.log("Instance count: ", count);
+            console.log("Mongodb instance count: ", count);
             return instance;
         }
     };

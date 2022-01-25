@@ -5,6 +5,7 @@ const cache = require('../utility/cache/cache');
 const stats = require('../utility/pubg/stats');
 const parse = require('../utility/parse');
 
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('ratcheck-lifetime')
@@ -18,7 +19,7 @@ module.exports = {
 
     async execute(interaction) {
 
-
+        
 
         await interaction.deferReply({ ephemeral: true });
 

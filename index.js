@@ -4,13 +4,10 @@ const { Client, Intents, Collection } = require('discord.js');
 const fs = require('fs');
 const dotenv = require('dotenv');
 const path = require('path');
-const redis = require("redis");
+const CacheSingleton = require('./utility/cache/cache-singleton');
 const MongodbSingleton = require('./utility/database/mongodb-singleton');
 
 dotenv.config();
-
-const redisPort = 6379
-global.cache = redis.createClient(redisPort);
 
 const commands = [];
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
@@ -75,9 +72,10 @@ client.login(process.env.BOT_TOKEN);
 
 (async () => {
     
-    global.cache.on('error', (err) => console.log('Redis Client Error', err));
+    var cache = CacheSingleton.getInstance();
+    cache.on('error', (err) => console.log('Redis Client Error', err));
     try {
-        await global.cache.connect();
+        await cache.connect();
 
         var mongodb = MongodbSingleton.getInstance();
         await mongodb.connect();

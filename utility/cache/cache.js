@@ -1,8 +1,11 @@
+const CacheSingleton = require('./cache-singleton');
 
 module.exports = {
 
+
     verifyKey: async function(key) {
-        return await global.cache.get(key, (error, data) => {
+        var cache = CacheSingleton.getInstance();
+        return await cache.get(key, (error, data) => {
             if (error) {
                 return error;
             }
@@ -13,7 +16,8 @@ module.exports = {
     },
 
     insertKey: async function(key, value, expire) {
-        return await global.cache.set(key, value, {
+        var cache = CacheSingleton.getInstance();
+        return await cache.set(key, value, {
             EX: expire,   
         });
     },
