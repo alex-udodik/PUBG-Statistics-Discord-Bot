@@ -12,7 +12,7 @@ module.exports = {
         .addStringOption(option =>
             option
                 .setName('names')
-                .setDescription('Case-sensitive for 1st-time names! Example: DallasCowboy')
+                .setDescription('Case-sensitive for 1st-time names! Example: DallasCowboy TGLTN')
                 .setRequired(true)
         ),
 

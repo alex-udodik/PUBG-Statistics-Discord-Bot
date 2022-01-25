@@ -26,7 +26,6 @@ module.exports = {
 
         await interaction.deferReply({ ephemeral: true });
 
-
         await interaction.editReply(
             `not implemented yet`
         )
