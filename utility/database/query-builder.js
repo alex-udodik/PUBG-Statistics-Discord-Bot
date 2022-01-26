@@ -4,12 +4,10 @@ class MongoQueryBuilder {
         this.query = []
     }
 
-    addQuery(key_value_pairs) {
-        for (var i = 0; i < key_value_pairs.length; i++) {
-            var obj = {};
-            obj[Object.keys(key_value_pairs[i])[0]] = key_value_pairs[i][Object.keys(key_value_pairs[i])[0]];
-            this.query.push(obj)
-        }
+    addQuery(key, value) {
+        var obj = {};
+        obj[key] = value;
+        this.query.push(obj);
     }
 
     build() {
