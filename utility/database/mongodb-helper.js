@@ -2,12 +2,15 @@ const MongoDBSingleton = require('./mongodb-singleton');
 
 module.exports = {
 
+    getCollection: function(database, collection) {
+        const databaseInstance = MongoDBSingleton.getInstance()
+        const mongodbDatabase = databaseInstance.db(database);
+        return mongodbDatabase.collection(collection);
+    },
+
     insertOne: async function (database, collection, document) {
         try {
-
-            const databaseInstance = MongoDBSingleton.getInstance()
-            const mongodbDatabase = databaseInstance.db(database);
-            const mongodbCollection = mongodbDatabase.collection(collection);
+            const mongodbCollection = this.getCollection(database, collection);
 
             const result = await mongodbCollection.insertOne(document);
             console.log(`A document was inserted with the _id: ${result.insertedId}`);
@@ -20,9 +23,7 @@ module.exports = {
     findOne: async function (database, collection, query, options) {
         try {
 
-            const databaseInstance = MongoDBSingleton.getInstance()
-            const mongodbDatabase = databaseInstance.db(database);
-            const mongodbCollection = mongodbDatabase.collection(collection);
+            const mongodbCollection = this.getCollection(database, collection);
 
             var name;
             if (typeof options === "undefined") { name = await mongodbCollection.findOne(query, options); }
@@ -38,6 +39,13 @@ module.exports = {
 
     findMany: async function (database, collection, query, options) {
 
+        try {
+            const mongodbCollection = this.getCollection(database, collection);
+
+            
+        } finally {
+
+        }
         /*
         db.collection.find({
             $and: [
