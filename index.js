@@ -3,7 +3,6 @@ const { Routes } = require('discord-api-types/v9');
 const { Client, Intents, Collection } = require('discord.js');
 const fs = require('fs');
 const dotenv = require('dotenv');
-const path = require('path');
 const CacheSingleton = require('./utility/cache/cache-singleton');
 const MongodbSingleton = require('./utility/database/mongodb-singleton');
 
@@ -76,9 +75,9 @@ client.login(process.env.BOT_TOKEN);
     cache.on('error', (err) => console.log('Redis Client Error', err));
     try {
         await cache.connect();
-
         var mongodb = MongodbSingleton.getInstance();
         await mongodb.connect();
+
     } catch (error) {
         console.log("Error: ", error);
     }

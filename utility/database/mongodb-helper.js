@@ -41,26 +41,11 @@ module.exports = {
 
         try {
             const mongodbCollection = this.getCollection(database, collection);
-
+            const cursor = await mongodbCollection.find(query);
+            await cursor.forEach(doc => console.log(doc));
             
         } finally {
 
         }
-        /*
-        db.collection.find({
-            $and: [
-                {
-                    $or: [
-                        {
-                            name: "***REMOVED***"
-                        },
-                        {
-                            name: "***REMOVED***"
-                        }
-                    ]
-                }
-            ]
-        })*/
-
     },
 }
