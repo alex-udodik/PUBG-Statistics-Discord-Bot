@@ -36,5 +36,16 @@ module.exports = {
         });
     },
 
+    //takes in a list of objects which just have {key: value}
+    //example: [{key: "key", value: "value"}, {key: "key", value: "value"} ]
+    insertKeys: async function(key_value_pairs, expire) {
+        for (var i = 0; i < key_value_pairs.length; i++) {
+            const key = key_value_pairs[i].key;
+            const value = key_value_pairs[i].value;
+            await this.insertKey(key, value, expire)
+        }
+    },
+
+    //30 mins
     TTL: 1800,
 }
