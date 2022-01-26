@@ -17,7 +17,6 @@ module.exports = {
         }
     },
 
-
     findOne: async function (database, collection, query, options) {
         try {
 
@@ -26,8 +25,8 @@ module.exports = {
             const mongodbCollection = mongodbDatabase.collection(collection);
 
             var name;
-            if (typeof options === "undefined") {name = await mongodbCollection.findOne(query, options);}
-            else {name = await mongodbCollection.findOne(query);}
+            if (typeof options === "undefined") { name = await mongodbCollection.findOne(query, options); }
+            else { name = await mongodbCollection.findOne(query); }
 
             console.log(query, `was able to find: `, name);
             return name;
@@ -37,7 +36,23 @@ module.exports = {
         }
     },
 
+    findMany: async function (database, collection, query, options) {
 
+        /*
+        db.collection.find({
+            $and: [
+                {
+                    $or: [
+                        {
+                            name: "***REMOVED***"
+                        },
+                        {
+                            name: "***REMOVED***"
+                        }
+                    ]
+                }
+            ]
+        })*/
 
-
+    },
 }

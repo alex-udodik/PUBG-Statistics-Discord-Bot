@@ -15,6 +15,20 @@ module.exports = {
         });
     },
 
+    verifyKeys: async function(keys) {
+        var namesInCache = [];
+
+        for (var i = 0; i < keys.length; i++) {
+            const value = await this.verifyKey(keys[i])
+            var obj;
+            if (value !== null) { obj = {name: keys[i], accountId: value}}
+            else { obj = {name: keys[i], accountId: null}}
+            namesInCache.push(obj);
+        }
+
+        return namesInCache;
+    },
+
     insertKey: async function(key, value, expire) {
         var cache = CacheSingleton.getInstance();
         return await cache.set(key, value, {
