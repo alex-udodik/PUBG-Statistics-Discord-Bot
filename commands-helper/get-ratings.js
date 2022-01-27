@@ -2,6 +2,7 @@ const cache = require('../utility/cache/redis-cache');
 const MongoQueryBuilder = require('../utility/database/query-builder');
 const mongodb = require('../utility/database/mongodb-helper');
 const api = require('../utility/pubg/api');
+
 class Ratings {
     constructor(names) {
         this.names = names;
@@ -112,6 +113,10 @@ _checkNamesFromAPI = async (obj) => {
         console.log("obj: ", obj);
         return obj
     }
+}
+
+_insertNamesIntoCache = async () => {
+
 }
 
 module.exports = Ratings;
