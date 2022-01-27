@@ -1,9 +1,10 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const api = require('../utility/pubg/api');
 const mongodb = require('../utility/database/mongodb-helper');
-const cache = require('../utility/cache/cache');
+const cache = require('../utility/cache/redis-cache');
 const stats = require('../utility/pubg/stats');
 const parse = require('../utility/parse');
+const Ratings = require('../commands-helper/get-ratings');
 
 
 module.exports = {
@@ -26,6 +27,14 @@ module.exports = {
         const pubg_name = interaction.options.getString('names');
         const names = pubg_name.split(/[ ,]+/)
         console.log("Names: ", names);
+
+        var ratings = new Ratings(names);
+        await ratings.getRatings();
+        await interaction.editReply(
+            `Not implemented yet.`
+        )
+        return;
+        /*
         console.log(`Checking cache for: ${pubg_name.toLowerCase()}`);
 
         const accountId = await cache.verifyKey(pubg_name.toLowerCase())
@@ -136,6 +145,6 @@ module.exports = {
                     return;
                 }
             }
-        }
+        } */
     }
 }

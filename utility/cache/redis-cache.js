@@ -1,4 +1,4 @@
-const CacheSingleton = require('./cache-singleton');
+const CacheSingleton = require('./redis-cache-singleton');
 
 module.exports = {
 

@@ -1,13 +1,6 @@
 const MongoDBSingleton = require('./mongodb-singleton');
 
 module.exports = {
-
-    getCollection: function(database, collection) {
-        const databaseInstance = MongoDBSingleton.getInstance()
-        const mongodbDatabase = databaseInstance.db(database);
-        return mongodbDatabase.collection(collection);
-    },
-
     insertOne: async function (database, collection, document) {
         try {
             const mongodbCollection = this.getCollection(database, collection);
@@ -40,12 +33,18 @@ module.exports = {
     findMany: async function (database, collection, query, options) {
 
         try {
-            const mongodbCollection = this.getCollection(database, collection);
+            const mongodbCollection = getCollection(database, collection);
             const cursor = await mongodbCollection.find(query);
-            await cursor.forEach(doc => console.log(doc));
-            
+            return cursor;
+        
         } finally {
 
         }
     },
+}
+
+const getCollection = function(database, collection) {
+    const databaseInstance = MongoDBSingleton.getInstance()
+    const mongodbDatabase = databaseInstance.db(database);
+    return mongodbDatabase.collection(collection);
 }
