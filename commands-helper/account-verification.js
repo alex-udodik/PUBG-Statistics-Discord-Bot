@@ -3,15 +3,18 @@ const MongoQueryBuilder = require('../utility/database/query-builder');
 const mongodb = require('../utility/database/mongodb-helper');
 const api = require('../utility/pubg/api');
 
-class Ratings {
+class AccountVerificationHandler {
     constructor(names) {
         this.names = names;
     }
 
-    async getRatings() {
+    async getAccounts() {
         var obj = await _checkNamesInCache(this.names);
         obj = await _checkNamesInDatabase(obj);
-        await _checkNamesFromAPI(obj);
+        obj = await _checkNamesFromAPI(obj);
+        await _insertNamesIntoCache(obj, cache.TTL);
+        await _insertAccountsIntoDatabase(obj)
+        return obj.accounts;
     }
 }
 
@@ -120,9 +123,15 @@ _insertNamesIntoCache = async (obj, ttl) => {
         const name = account.name.toLowerCase();
         const accountId = account.accountId;
         await cache.insertKey(name, accountId, ttl)
+        await cache.insertKey(accountId, name, 60)
     }))
 }
 
+_insertAccountsIntoDatabase = async (obj) => {
+    if (obj.accountsToCacheAndStore.length > 0) {
+        const results = await mongodb.insertMany("PUBG", "Names", obj.accountsToCacheAndStore);
+        console.log(results);
+    }
+}
 
-
-module.exports = Ratings;
+module.exports = AccountVerificationHandler;

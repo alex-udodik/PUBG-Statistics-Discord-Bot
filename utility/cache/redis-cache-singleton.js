@@ -9,7 +9,6 @@ var CacheSingleton = (function () {
         var object = redis.createClient(redisPort);
         count += 1;
         return object;
-        
     }
 
     return {
@@ -17,8 +16,6 @@ var CacheSingleton = (function () {
             if (!instance) {
                 instance = createInstance();
             }
-
-            console.log("Cache instance count: ", count);
             return instance;
         }
     };

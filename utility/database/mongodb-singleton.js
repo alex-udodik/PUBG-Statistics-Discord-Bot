@@ -8,8 +8,7 @@ var MongoDBSingleton = (function () {
         const mongodbURI = `mongodb+srv://***REMOVED***:${process.env.MONGO_DB_PASSWORD}@clusterdev0.pcdo6.mongodb.net/test`;
         var object = new MongoClient(mongodbURI);
         count += 1;
-        return object;
-        
+        return object;   
     }
 
     return {
@@ -17,8 +16,6 @@ var MongoDBSingleton = (function () {
             if (!instance) {
                 instance = createInstance();
             }
-
-            console.log("Mongodb instance count: ", count);
             return instance;
         }
     };

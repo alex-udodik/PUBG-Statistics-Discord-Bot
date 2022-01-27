@@ -1,10 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const api = require('../utility/pubg/api');
-const mongodb = require('../utility/database/mongodb-helper');
-const cache = require('../utility/cache/redis-cache');
-const stats = require('../utility/pubg/stats');
-const parse = require('../utility/parse');
-const Ratings = require('../commands-helper/get-ratings');
+const AccountVerificationHandler = require('../commands-helper/account-verification');
 
 
 module.exports = {
@@ -31,14 +26,13 @@ module.exports = {
             await interaction.editReply(
                 `Exceeded number of names. (Max 10)`
             )
-            
         }
         else {
             console.log("Names: ", names);
 
-            var ratings = new Ratings(names);
-            await ratings.getRatings();
-
+            var ratings = new AccountVerificationHandler(names);
+            const verifiedNames = await ratings.getAccounts();
+            
             await interaction.editReply(
                 `Not implemented.`
             )
