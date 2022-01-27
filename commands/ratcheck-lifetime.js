@@ -28,10 +28,10 @@ module.exports = {
         }
         else {
             console.log("Names: ", names);
-
             var ratings = new AccountVerificationHandler(names);
             const verifiedNames = await ratings.getAccounts();
             const namesWithStats = await statsParser.addStats(verifiedNames, "lifetime", "squad-fpp", false);
+            
             console.log("names with stats: ", namesWithStats);
             await interaction.editReply(
                 `Not implemented.`
