@@ -1,7 +1,7 @@
 const cache = require('../utility/cache/redis-cache');
 const MongoQueryBuilder = require('../utility/database/query-builder');
 const mongodb = require('../utility/database/mongodb-helper');
-
+const api = require('../utility/pubg/api');
 class Ratings {
     constructor(names) {
         this.names = names;
@@ -10,6 +10,7 @@ class Ratings {
     async getRatings() {
         var obj = await _checkNamesInCache(this.names);
         obj = await _checkNamesInDatabase(obj);
+        await _checkNamesFromAPI(obj);
     }
 }
 
@@ -45,7 +46,7 @@ _checkNamesInDatabase = async (obj) => {
     obj.accounts.forEach(item => {
         if (item.accountId === null) {
             const key = Object.keys(item)[0];
-            const value = item.name;
+            const value = item.name.toLowerCase();
             querybuilder.addQuery(key, value);
         }
     });
@@ -70,9 +71,47 @@ _checkNamesInDatabase = async (obj) => {
 }
 
 _checkNamesFromAPI = async (obj) => {
-    if (obj.namesFromMongoDB === 0) { return obj; }
 
-    
+    var urlPreJoin = ['https://api.pubg.com/shards/steam/players?filter[playerNames]='];
+
+    obj.accounts.forEach(account => {
+        if (account.accountId === null) {
+            urlPreJoin.push(`${account.name},`);
+        }
+    })
+
+    if (urlPreJoin.length === 1) { return obj; }
+
+    var url = urlPreJoin.join("");
+    url = url.slice(0, -1);
+
+    console.log("url ", url);
+    const results = await api.fetchData(url);
+    console.log("pubg results: ", results);
+
+    if ('errors' in results) { return obj; }
+    else {
+        var accountsToCacheAndStore = [];
+
+        results.data.forEach(accountDataFromAPI => {
+            obj.accounts.forEach(account => {
+                if (accountDataFromAPI.attributes.name.toLowerCase() === account.name.toLowerCase()) {
+                    account.accountId = accountDataFromAPI.id
+                }
+            })
+            var displayName = accountDataFromAPI.attributes.name;
+            accountsToCacheAndStore.push({
+                name: displayName.toLowerCase(),
+                displayName: displayName,
+                accountId: accountDataFromAPI.id
+            });
+        });
+
+        obj.accountsToCacheAndStore = accountsToCacheAndStore;
+
+        console.log("obj: ", obj);
+        return obj
+    }
 }
 
 module.exports = Ratings;

@@ -14,7 +14,7 @@ module.exports = {
         .addStringOption(option =>
             option
                 .setName('names')
-                .setDescription('Case-sensitive for 1st-time names! Example: DallasCowboy TGLTN')
+                .setDescription('Case-sensitive for 1st-time names! Max 10 names. Ex: DallasCowboy TGLTN shroud')
                 .setRequired(true)
         ),
 
@@ -26,14 +26,27 @@ module.exports = {
 
         const pubg_name = interaction.options.getString('names');
         const names = pubg_name.split(/[ ,]+/)
-        console.log("Names: ", names);
 
-        var ratings = new Ratings(names);
-        await ratings.getRatings();
-        await interaction.editReply(
-            `Not implemented yet.`
-        )
+        if (names.length > 10) {
+            await interaction.editReply(
+                `Exceeded number of names. (Max 10)`
+            )
+            
+        }
+        else {
+            console.log("Names: ", names);
+
+            var ratings = new Ratings(names);
+            await ratings.getRatings();
+
+            await interaction.editReply(
+                `Not implemented.`
+            )
+        }
+
         return;
+        
+        
         /*
         console.log(`Checking cache for: ${pubg_name.toLowerCase()}`);
 
