@@ -115,8 +115,14 @@ _checkNamesFromAPI = async (obj) => {
     }
 }
 
-_insertNamesIntoCache = async () => {
-
+_insertNamesIntoCache = async (obj, ttl) => {
+    await Promise.all(obj.accountsToCacheAndStore.map(async account => {
+        const name = account.name.toLowerCase();
+        const accountId = account.accountId;
+        await cache.insertKey(name, accountId, ttl)
+    }))
 }
+
+
 
 module.exports = Ratings;
