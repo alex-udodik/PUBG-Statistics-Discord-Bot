@@ -1,9 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const api = require('../utility/pubg/api');
-const mongodb = require('../utility/database/mongodb-helper');
-const cache = require('../utility/cache/redis-cache');
-const stats = require('../utility/pubg/stats');
-const parse = require('../utility/parse');
+
 
 module.exports = {
     data: new SlashCommandBuilder()

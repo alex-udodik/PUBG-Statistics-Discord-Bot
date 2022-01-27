@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const AccountVerificationHandler = require('../commands-helper/account-verification');
-
+const statsParser = require('../commands-helper/stats-parser');
+const statParser = require('../commands-helper/stats-parser');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -15,8 +16,6 @@ module.exports = {
 
     async execute(interaction) {
 
-        
-        //https://api.pubg.com/shards/steam/seasons/lifetime/gameMode/squad-fpp/players?filter[playerIds]=account.11395d32968f4e43842c7e1317afd1b9,account.b92bd758b729428f8e5f4faeeeee0348
         await interaction.deferReply({ ephemeral: true });
 
         const pubg_name = interaction.options.getString('names');
@@ -32,7 +31,8 @@ module.exports = {
 
             var ratings = new AccountVerificationHandler(names);
             const verifiedNames = await ratings.getAccounts();
-            
+            const namesWithStats = await statsParser.addStats(verifiedNames, "lifetime", "squad-fpp", false);
+            console.log("names with stats: ", namesWithStats);
             await interaction.editReply(
                 `Not implemented.`
             )

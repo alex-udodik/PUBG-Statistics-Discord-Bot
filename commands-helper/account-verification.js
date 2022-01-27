@@ -21,7 +21,9 @@ class AccountVerificationHandler {
 _checkNamesInCache = async (names) => {
     var obj = {
         accounts: [],
-        namesFromCache: 0
+        namesFromCache: 0,
+        accountsToCacheAndStore: 0,
+        namesFromMongoDB: 0
     };
 
     var namesFromCache = 0;
@@ -119,16 +121,18 @@ _checkNamesFromAPI = async (obj) => {
 }
 
 _insertNamesIntoCache = async (obj, ttl) => {
-    await Promise.all(obj.accountsToCacheAndStore.map(async account => {
-        const name = account.name.toLowerCase();
-        const accountId = account.accountId;
-        await cache.insertKey(name, accountId, ttl)
-        await cache.insertKey(accountId, name, 60)
-    }))
+    if (obj.accountsToCacheAndStore > 0) {
+        await Promise.all(obj.accountsToCacheAndStore.map(async account => {
+            const name = account.name.toLowerCase();
+            const accountId = account.accountId;
+            await cache.insertKey(name, accountId, ttl)
+            await cache.insertKey(accountId, name, 60)
+        }))
+    }
 }
 
 _insertAccountsIntoDatabase = async (obj) => {
-    if (obj.accountsToCacheAndStore.length > 0) {
+    if (obj.accountsToCacheAndStore > 0) {
         const results = await mongodb.insertMany("PUBG", "Names", obj.accountsToCacheAndStore);
         console.log(results);
     }
