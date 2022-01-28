@@ -12,38 +12,50 @@ class AccountVerificationHandler {
         var obj = await _checkNamesInCache(this.names);
         obj = await _checkNamesInDatabase(obj);
         obj = await _checkNamesFromAPI(obj);
+
         await _insertNamesIntoCache(obj, cache.TTL);
         await _insertAccountsIntoDatabase(obj)
-        return obj.accounts;
+        return obj;
     }
 }
 
 _checkNamesInCache = async (names) => {
     var obj = {
         accounts: [],
-        namesFromCache: 0,
-        accountsToCacheAndStore: 0,
-        namesFromMongoDB: 0
+        namesFromCacheCount: 0,
+        namesFromMongoDBCount: 0,
+        accountsToCache: [],
+        accountsToMongodb: [],
+        accountsFailedAPILookUp: [],
+        failedAPILookUp: false,
+        verifiedAccounts: false,
     };
 
-    var namesFromCache = 0;
+    var namesFromCacheCount = 0;
 
     var accounts = [];
-    await Promise.all(names.map(async name => {
+    await Promise.all(names.map(async name_ => {
+        const name = name_.toLowerCase();
         const id = await cache.verifyKey(name);
-        if (id !== null) { accounts.push({ name: name, accountId: id }); namesFromCache++; }
-        else { accounts.push({ name: name, accountId: null }); }
+        if (id !== null) {
+            var account = { name: name, accountId: id };
+            accounts.push(account);
+            obj.accountsToCache.push(account);
+            namesFromCacheCount++;
+            obj.verifiedAccounts = true;
+        }
+        else { accounts.push({ name: name_, accountId: null }); }
     }));
 
     obj.accounts = accounts
-    obj.namesFromCache = namesFromCache;
+    obj.namesFromCacheCount = namesFromCacheCount;
 
     return obj;
 }
 
 _checkNamesInDatabase = async (obj) => {
 
-    if (obj.accounts.length === obj.namesFromCache) {
+    if (obj.accounts.length === obj.namesFromCacheCount) {
         return obj;
     }
 
@@ -60,19 +72,21 @@ _checkNamesInDatabase = async (obj) => {
     const query = querybuilder.build();
     console.log(query);
     const dbResults = await mongodb.findMany("PUBG", "Names", query);
-    var namesFromMongoDB = 0;
+    var namesFromMongoDBCount = 0;
 
     await dbResults.forEach(doc => {
-        namesFromMongoDB++;
+        namesFromMongoDBCount++;
         obj.accounts.forEach(account => {
             if (doc.name === account.name.toLowerCase()) {
                 account.accountId = doc.accountId;
+                obj.accountsToCache.push({ name: account.name.toLowerCase(), accountId: doc.accountId });
+                obj.verifiedAccounts = true;
             }
         })
     }
     );
 
-    obj.namesFromMongoDB = namesFromMongoDB;
+    obj.namesFromMongoDBCount = namesFromMongoDBCount;
     return obj;
 }
 
@@ -80,9 +94,11 @@ _checkNamesFromAPI = async (obj) => {
 
     var urlPreJoin = ['https://api.pubg.com/shards/steam/players?filter[playerNames]='];
 
+    var accountsToLookUp = [];
     obj.accounts.forEach(account => {
         if (account.accountId === null) {
             urlPreJoin.push(`${account.name},`);
+            accountsToLookUp.push(account.name);
         }
     })
 
@@ -95,9 +111,14 @@ _checkNamesFromAPI = async (obj) => {
     const results = await api.fetchData(url);
     console.log("pubg results: ", results);
 
-    if ('errors' in results) { return obj; }
+    if ('errors' in results) {
+        obj.failedAPILookUp = true; 
+        obj.accountsFailedAPILookUp = accountsToLookUp;
+        return obj;
+    }
+
     else {
-        var accountsToCacheAndStore = [];
+        var accountsToMongodb = [];
 
         results.data.forEach(accountDataFromAPI => {
             obj.accounts.forEach(account => {
@@ -106,14 +127,11 @@ _checkNamesFromAPI = async (obj) => {
                 }
             })
             var displayName = accountDataFromAPI.attributes.name;
-            accountsToCacheAndStore.push({
-                name: displayName.toLowerCase(),
-                displayName: displayName,
-                accountId: accountDataFromAPI.id
-            });
+            accountsToMongodb.push({ name: displayName.toLowerCase(), displayName: displayName, accountId: accountDataFromAPI.id });
+            obj.accountsToCache.push({ name: displayName.toLowerCase(), accountId: accountDataFromAPI.id });
         });
 
-        obj.accountsToCacheAndStore = accountsToCacheAndStore;
+        obj.accountsToMongodb = accountsToMongodb;
 
         console.log("obj: ", obj);
         return obj
@@ -121,10 +139,12 @@ _checkNamesFromAPI = async (obj) => {
 }
 
 _insertNamesIntoCache = async (obj, ttl) => {
-    if (obj.accountsToCacheAndStore > 0) {
-        await Promise.all(obj.accountsToCacheAndStore.map(async account => {
+
+    if (obj.accountsToCache.length > 0) {
+        await Promise.all(obj.accountsToCache.map(async account => {
             const name = account.name.toLowerCase();
             const accountId = account.accountId;
+            console.log("name to insert into cache: ", name, accountId);
             await cache.insertKey(name, accountId, ttl)
             await cache.insertKey(accountId, name, 60)
         }))
@@ -132,9 +152,9 @@ _insertNamesIntoCache = async (obj, ttl) => {
 }
 
 _insertAccountsIntoDatabase = async (obj) => {
-    if (obj.accountsToCacheAndStore > 0) {
-        const results = await mongodb.insertMany("PUBG", "Names", obj.accountsToCacheAndStore);
-        console.log(results);
+    if (obj.accountsToMongodb.length > 0) {
+        const results = await mongodb.insertMany("PUBG", "Names", obj.accountsToMongodb);
+        console.log("Insertion into mongodb: ", results);
     }
 }
 

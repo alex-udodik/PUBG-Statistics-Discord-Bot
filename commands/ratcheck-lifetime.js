@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const AccountVerificationHandler = require('../commands-helper/account-verification');
 const statsParser = require('../commands-helper/stats-parser');
-const statParser = require('../commands-helper/stats-parser');
+const { MessageEmbed } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,24 +18,67 @@ module.exports = {
 
         await interaction.deferReply({ ephemeral: true });
 
+        const fail_message = "Accounts failed fetch from API (DNE or missing upper/lower case):";
+
         const pubg_name = interaction.options.getString('names');
         const names = pubg_name.split(/[ ,]+/)
 
         if (names.length > 10) {
-            await interaction.editReply(
-                `Exceeded number of names. (Max 10)`
-            )
+            await interaction.editReply(`Exceeded number of names. (Max 10)`)
         }
         else {
-            console.log("Names: ", names);
+            
             var ratings = new AccountVerificationHandler(names);
             const verifiedNames = await ratings.getAccounts();
-            const namesWithStats = await statsParser.addStats(verifiedNames, "lifetime", "squad-fpp", false);
-            
-            console.log("names with stats: ", namesWithStats);
-            await interaction.editReply(
-                `Not implemented.`
-            )
+            console.log("verifiednames: ", verifiedNames);
+            if (verifiedNames.failedAPILookUp === true && verifiedNames.verifiedAccounts === false) {
+                
+                var description = [];
+                verifiedNames.accountsFailedAPILookUp.forEach(name => {
+                    description.push(`\n\u2022${name}`);
+                })
+
+                var embed = {
+                    title: fail_message,
+                    description: description.join("")
+                }
+                await interaction.editReply({ embeds: [embed] })
+            } else {
+                const namesWithStats = await statsParser.addStats(verifiedNames.accounts, "lifetime", "squad-fpp", false);
+
+                var fields = [];
+                var footer = [fail_message];
+
+                namesWithStats.forEach(account => {
+
+                    if (account.accountId != null) {
+                        var item = [];
+                        for (const [key, value] of Object.entries(account.calcedStats)) {
+                            item.push(`${key}: ${value}\n`);
+                        }
+                        const value = item.join("");
+                        const field = {
+                            name: account.name,
+                            value: value,
+                            inline: true
+                        }
+                        fields.push(field);
+                    }
+
+                    if (account.accountId === null) { footer.push(`\n\u2022${account.name}`); }
+                })
+
+                var embed = {
+                    title: "Lifetime stats",
+                    fields: fields,
+                    footer: { text: (footer.length > 1) ? footer.join("") : "" }
+                }
+
+                console.log("names with stats: ", namesWithStats);
+                await interaction.editReply(
+                    { embeds: [embed] }
+                )
+            }
         }
 
         return;

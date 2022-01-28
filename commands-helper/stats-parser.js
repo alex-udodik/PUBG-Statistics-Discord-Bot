@@ -26,8 +26,11 @@ module.exports = {
                     })
                 })
 
+                console.log("Stats before calculations: ", accounts);
                 accounts.forEach(account => {
-                    account.calcedStats = parseStats(account.rawStats);
+                    if (account.accountId !== null) {
+                        account.calcedStats = parseStats(account.rawStats);
+                    }
                 })
                 return accounts;
             }
