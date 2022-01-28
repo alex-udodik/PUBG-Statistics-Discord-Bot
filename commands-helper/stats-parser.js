@@ -11,9 +11,12 @@ module.exports = {
             var url = urlPreJoin.join("");
             url = url.slice(0, -1);
 
-            const results = await api.fetchData(url);
+            const results = await api.fetchData(url, 5000);
 
-            if ('errors' in results) { return "Fetch from API failed. The name does not exist."; }
+            console.log("Results from api (fetching stats): ", results);
+            
+            if ('errors' in results) {return "Failed to look up name."};
+            if (results instanceof Error) {  return "Error"; }
             else {
                 accounts.forEach(account => {
                     results.data.forEach(stats => {

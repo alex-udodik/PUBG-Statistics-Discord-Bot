@@ -30,6 +30,11 @@ module.exports = {
             
             var ratings = new AccountVerificationHandler(names);
             const verifiedNames = await ratings.getAccounts();
+
+            if (verifiedNames === "Error") {
+                await interaction.editReply(`There was an error with connecting to the PUBG API.`)
+                return;
+            }
             console.log("verifiednames: ", verifiedNames);
             if (verifiedNames.failedAPILookUp === true && verifiedNames.verifiedAccounts === false) {
                 
@@ -45,7 +50,12 @@ module.exports = {
                 await interaction.editReply({ embeds: [embed] })
             } else {
                 const namesWithStats = await statsParser.addStats(verifiedNames.accounts, "lifetime", "squad-fpp", false);
-
+                if (namesWithStats === "Error") {
+                    await interaction.editReply(
+                       `There was an error with connecting to the PUBG API.`
+                    )
+                    return;
+                }
                 var fields = [];
                 var footer = [fail_message];
 

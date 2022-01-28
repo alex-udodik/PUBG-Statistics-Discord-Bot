@@ -13,6 +13,9 @@ class AccountVerificationHandler {
         obj = await _checkNamesInDatabase(obj);
         obj = await _checkNamesFromAPI(obj);
 
+        if (obj === "Error") {
+            return "Error";
+        }
         await _insertNamesIntoCache(obj, cache.TTL);
         await _insertAccountsIntoDatabase(obj)
         return obj;
@@ -55,12 +58,9 @@ _checkNamesInCache = async (names) => {
 
 _checkNamesInDatabase = async (obj) => {
 
-    if (obj.accounts.length === obj.namesFromCacheCount) {
-        return obj;
-    }
+    if (obj.accounts.length === obj.namesFromCacheCount) {return obj;}
 
     var querybuilder = new MongoQueryBuilder();
-
     obj.accounts.forEach(item => {
         if (item.accountId === null) {
             const key = Object.keys(item)[0];
@@ -108,9 +108,10 @@ _checkNamesFromAPI = async (obj) => {
     url = url.slice(0, -1);
 
     console.log("url ", url);
-    const results = await api.fetchData(url);
+    const results = await api.fetchData(url, 5000);
     console.log("pubg results: ", results);
 
+    if (results instanceof Error) {  return "Error"; }
     if ('errors' in results) {
         obj.failedAPILookUp = true; 
         obj.accountsFailedAPILookUp = accountsToLookUp;
