@@ -16,6 +16,10 @@ class AccountVerificationHandler {
         if (obj === "Error") {
             return "Error";
         }
+
+        obj = _seperateAccounts(obj);
+
+        console.log("OBJ after seperation: ", obj);
         await _insertNamesIntoCache(obj, cache.TTL);
         await _insertAccountsIntoDatabase(obj)
         return obj;
@@ -58,7 +62,7 @@ _checkNamesInCache = async (names) => {
 
 _checkNamesInDatabase = async (obj) => {
 
-    if (obj.accounts.length === obj.namesFromCacheCount) {return obj;}
+    if (obj.accounts.length === obj.namesFromCacheCount) { return obj; }
 
     var querybuilder = new MongoQueryBuilder();
     obj.accounts.forEach(item => {
@@ -111,9 +115,13 @@ _checkNamesFromAPI = async (obj) => {
     const results = await api.fetchData(url, 5000);
     console.log("pubg results: ", results);
 
-    if (results instanceof Error) {  return "Error"; }
+    if (results instanceof Error) {
+        obj.failedAPILookUp = true;
+        obj.accountsFailedAPILookUp = accountsToLookUp;
+        return "Error";
+    }
     if ('errors' in results) {
-        obj.failedAPILookUp = true; 
+        obj.failedAPILookUp = true;
         obj.accountsFailedAPILookUp = accountsToLookUp;
         return obj;
     }
@@ -134,12 +142,13 @@ _checkNamesFromAPI = async (obj) => {
 
         obj.accountsToMongodb = accountsToMongodb;
 
-        console.log("obj: ", obj);
+        //console.log("obj: ", obj);
         return obj
     }
 }
 
 _insertNamesIntoCache = async (obj, ttl) => {
+
 
     if (obj.accountsToCache.length > 0) {
         await Promise.all(obj.accountsToCache.map(async account => {
@@ -157,6 +166,27 @@ _insertAccountsIntoDatabase = async (obj) => {
         const results = await mongodb.insertMany("PUBG", "Names", obj.accountsToMongodb);
         console.log("Insertion into mongodb: ", results);
     }
+}
+
+_seperateAccounts = (obj) => {
+    if (obj.accountsFailedAPILookUp.length > 0) {
+        var verifiedAccounts = []
+        obj.accounts.forEach(account => {
+            if (account.accountId !== null) {
+                const acc = { name: account.name, accountId: account.accountId }
+                verifiedAccounts.push(acc);
+            }
+        })
+
+        if (obj.verifiedAccounts === false) {
+            obj.accounts = [];
+            return obj;
+        }
+        obj.accounts = verifiedAccounts;
+        return obj;
+    }
+
+    return obj;
 }
 
 module.exports = AccountVerificationHandler;

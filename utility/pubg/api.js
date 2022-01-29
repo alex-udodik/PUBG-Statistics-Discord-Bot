@@ -31,7 +31,7 @@ module.exports = {
             }).then(body => {
                 return body;
             }).catch(err => {
-                console.log("error from api: ", err);
+                console.log("error from api: ", err.type);
                 clearTimeout(timeout_);
                 return err;
             });
