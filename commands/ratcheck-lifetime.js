@@ -1,7 +1,6 @@
 const {SlashCommandBuilder} = require('@discordjs/builders');
 const AccountVerificationHandler = require('../commands-helper/account-verification');
 const statsParser = require('../commands-helper/stats-parser');
-const {MessageEmbed} = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -35,14 +34,16 @@ module.exports = {
         var footer = [fail_message];
         var embed = {title: "",fields: "", footer: {text: ""}}
 
-        if (verifiedAccounts === "Error") {
-            await interaction.editReply(`There was an error with connecting to the PUBG API.`)
+        if ('APIError' in verifiedAccounts) {
+            const details = verifiedAccounts.details;
+            await interaction.editReply(`There was an error involving ${details}`)
             return;
         }
         if (verifiedAccounts.accounts.length > 0) {
             const namesWithStats = await statsParser.addStats(verifiedAccounts.accounts, "lifetime", "squad-fpp", false);
-            if (namesWithStats === "Error") {
-                await interaction.editReply(`There was an error with connecting to the PUBG API.`)
+            if ('APIError' in namesWithStats) {
+                const details = namesWithStats.details;
+                await interaction.editReply(`There was an error involving ${details}`)
                 return;
             }
             namesWithStats.forEach(account => {

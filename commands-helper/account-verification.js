@@ -10,18 +10,31 @@ class AccountVerificationHandler {
 
     async getAccounts() {
         var obj = await _checkNamesInCache(this.names);
-        obj = await _checkNamesInDatabase(obj);
-        obj = await _checkNamesFromAPI(obj);
+        var mongo = await _checkNamesInDatabase(obj);
 
-        if (obj === "Error") {
-            return "Error";
+        if (mongo.error.mongodb.read === true) {
+            console.log("Mongodb had a read error");
+
+            //continute with code and try to fetch names from pubg api
+            mongo = obj;
         }
 
-        obj = _seperateAccounts(obj);
+        var pubg = await _checkNamesFromAPI(mongo);
 
-        console.log("OBJ after seperation: ", obj);
+        if (pubg.api === true) {
+            console.log("Error fetching from PUGB API");
+            return {APIError: true, details: "PUBG API"}
+        }
+
+        obj = _seperateAccounts(pubg);
+
         await _insertNamesIntoCache(obj, cache.TTL);
-        await _insertAccountsIntoDatabase(obj)
+        var insertion = await _insertAccountsIntoDatabase(obj);
+
+        if (typeof insertion !== "undefined") {
+            console.log("Mongodb had a write error");
+        }
+
         return obj;
     }
 }
@@ -36,6 +49,13 @@ _checkNamesInCache = async (names) => {
         accountsFailedAPILookUp: [],
         failedAPILookUp: false,
         verifiedAccounts: false,
+        error: {
+            api: false,
+            mongodb: {
+                read: false,
+                insert: false
+            }
+        }
     };
 
     var namesFromCacheCount = 0;
@@ -45,13 +65,14 @@ _checkNamesInCache = async (names) => {
         const name = name_.toLowerCase();
         const id = await cache.verifyKey(name);
         if (id !== null) {
-            var account = { name: name, accountId: id };
+            var account = {name: name, accountId: id};
             accounts.push(account);
             obj.accountsToCache.push(account);
             namesFromCacheCount++;
             obj.verifiedAccounts = true;
+        } else {
+            accounts.push({name: name_, accountId: null});
         }
-        else { accounts.push({ name: name_, accountId: null }); }
     }));
 
     obj.accounts = accounts
@@ -62,7 +83,9 @@ _checkNamesInCache = async (names) => {
 
 _checkNamesInDatabase = async (obj) => {
 
-    if (obj.accounts.length === obj.namesFromCacheCount) { return obj; }
+    if (obj.accounts.length === obj.namesFromCacheCount) {
+        return obj;
+    }
 
     var querybuilder = new MongoQueryBuilder();
     obj.accounts.forEach(item => {
@@ -76,18 +99,23 @@ _checkNamesInDatabase = async (obj) => {
     const query = querybuilder.build();
     console.log(query);
     const dbResults = await mongodb.findMany("PUBG", "Names", query);
+    if (dbResults instanceof Error) {
+        obj.error.mongodb.read = true;
+        return obj;
+    }
+
     var namesFromMongoDBCount = 0;
 
     await dbResults.forEach(doc => {
-        namesFromMongoDBCount++;
-        obj.accounts.forEach(account => {
-            if (doc.name === account.name.toLowerCase()) {
-                account.accountId = doc.accountId;
-                obj.accountsToCache.push({ name: account.name.toLowerCase(), accountId: doc.accountId });
-                obj.verifiedAccounts = true;
-            }
-        })
-    }
+            namesFromMongoDBCount++;
+            obj.accounts.forEach(account => {
+                if (doc.name === account.name.toLowerCase()) {
+                    account.accountId = doc.accountId;
+                    obj.accountsToCache.push({name: account.name.toLowerCase(), accountId: doc.accountId});
+                    obj.verifiedAccounts = true;
+                }
+            })
+        }
     );
 
     obj.namesFromMongoDBCount = namesFromMongoDBCount;
@@ -106,7 +134,9 @@ _checkNamesFromAPI = async (obj) => {
         }
     })
 
-    if (urlPreJoin.length === 1) { return obj; }
+    if (urlPreJoin.length === 1) {
+        return obj;
+    }
 
     var url = urlPreJoin.join("");
     url = url.slice(0, -1);
@@ -118,15 +148,14 @@ _checkNamesFromAPI = async (obj) => {
     if (results instanceof Error) {
         obj.failedAPILookUp = true;
         obj.accountsFailedAPILookUp = accountsToLookUp;
-        return "Error";
+        obj.error.api = true;
+        return obj.error;
     }
     if ('errors' in results) {
         obj.failedAPILookUp = true;
         obj.accountsFailedAPILookUp = accountsToLookUp;
         return obj;
-    }
-
-    else {
+    } else {
         var accountsToMongodb = [];
 
         results.data.forEach(accountDataFromAPI => {
@@ -136,8 +165,12 @@ _checkNamesFromAPI = async (obj) => {
                 }
             })
             var displayName = accountDataFromAPI.attributes.name;
-            accountsToMongodb.push({ name: displayName.toLowerCase(), displayName: displayName, accountId: accountDataFromAPI.id });
-            obj.accountsToCache.push({ name: displayName.toLowerCase(), accountId: accountDataFromAPI.id });
+            accountsToMongodb.push({
+                name: displayName.toLowerCase(),
+                displayName: displayName,
+                accountId: accountDataFromAPI.id
+            });
+            obj.accountsToCache.push({name: displayName.toLowerCase(), accountId: accountDataFromAPI.id});
         });
 
         obj.accountsToMongodb = accountsToMongodb;
@@ -165,6 +198,10 @@ _insertAccountsIntoDatabase = async (obj) => {
     if (obj.accountsToMongodb.length > 0) {
         const results = await mongodb.insertMany("PUBG", "Names", obj.accountsToMongodb);
         console.log("Insertion into mongodb: ", results);
+        if (results instanceof Error) {
+            obj.error.mongodb.write = true;
+            return obj.error;
+        }
     }
 }
 
@@ -173,7 +210,7 @@ _seperateAccounts = (obj) => {
         var verifiedAccounts = []
         obj.accounts.forEach(account => {
             if (account.accountId !== null) {
-                const acc = { name: account.name, accountId: account.accountId }
+                const acc = {name: account.name, accountId: account.accountId}
                 verifiedAccounts.push(acc);
             }
         })

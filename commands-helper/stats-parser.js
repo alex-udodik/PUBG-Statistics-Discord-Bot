@@ -16,7 +16,7 @@ module.exports = {
             console.log("Results from api (fetching stats): ", results);
             
             if ('errors' in results) {return "Failed to look up name."};
-            if (results instanceof Error) {  return "Error"; }
+            if (results instanceof Error) {  return {APIError: true, details: "PUBG API"} }
             else {
                 accounts.forEach(account => {
                     results.data.forEach(stats => {

@@ -8,7 +8,9 @@ module.exports = {
             console.log(`A document was inserted with the _id: ${result.insertedId}`);
 
             return result.acknowledged;
-        } finally {}
+        } catch (error) {
+            return error;
+        }
     },
 
     insertMany: async function(database, collection, document) {
@@ -18,32 +20,32 @@ module.exports = {
             console.log(`A document was inserted with the _id: ${result.insertedId}`);
 
             return result.acknowledged;
-        } finally {}
+        } catch (error) {
+            return error;
+        }
     },
 
     findOne: async function (database, collection, query, options) {
         try {
-
             const mongodbCollection = getCollection(database, collection);
-            var name;
-
+            let name;
             if (typeof options === "undefined") { name = await mongodbCollection.findOne(query, options); }
             else { name = await mongodbCollection.findOne(query); }
 
             console.log(query, `was able to find: `, name);
-
             return name;
-
-        } finally {}
+        } catch (error) {
+            return error;
+        }
     },
 
     findMany: async function (database, collection, query, options) {
         try {
             const mongodbCollection = getCollection(database, collection);
-            const cursor = await mongodbCollection.find(query);
-            
-            return cursor;
-        } finally {}
+            return await mongodbCollection.find(query);
+        } catch (error) {
+            return error;
+        }
     },
 }
 
