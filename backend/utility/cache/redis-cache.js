@@ -6,6 +6,7 @@ module.exports = {
         var cache = CacheSingleton.getInstance();
         return await cache.get(key, (error, data) => {
             if (error) {
+                console.log("cache lookup failed123");
                 return error;
             }
             else {
