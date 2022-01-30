@@ -16,10 +16,7 @@ module.exports = {
     insertMany: async function(database, collection, document) {
         try {
             const mongodbCollection = getCollection(database, collection);
-            const result = await mongodbCollection.insertMany(document);
-            console.log(`A document was inserted with the _id: ${result.insertedId}`);
-
-            return result.acknowledged;
+            return await mongodbCollection.insertMany(document);
         } catch (error) {
             return error;
         }

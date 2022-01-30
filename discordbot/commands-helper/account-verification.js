@@ -181,8 +181,6 @@ _checkNamesFromAPI = async (obj) => {
 }
 
 _insertNamesIntoCache = async (obj, ttl) => {
-
-
     if (obj.accountsToCache.length > 0) {
         await Promise.all(obj.accountsToCache.map(async account => {
             const name = account.name.toLowerCase();

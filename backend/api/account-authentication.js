@@ -31,6 +31,9 @@ class AccountVerificationHandler {
         var obj = await _checkNamesInCache(this.names, this.obj);
         obj = await _checkNamesInMongoDB(obj);
         obj = await _checkNamesFromPubgApi(obj);
+        console.log(obj)
+        await _insertNamesIntoCache(obj, 1800);
+        await _insertAccountsIntoDatabase(obj);
         return obj;
     }
 }
@@ -38,15 +41,17 @@ class AccountVerificationHandler {
 _checkNamesInCache = async (names, obj) => {
     await Promise.all(names.map(async name_ => {
         const name = name_.toLowerCase();
-        const result = await cache.verifyKey(name);
-        if (result !== null) {
+        const value = await cache.verifyKey(name);
+        if (value !== null) {
+            console.log("FOUND IN CACHE: ", value);
+            const result = await JSON.parse(value)
             const account = {name: name, displayName: result.displayName, accountId: result.accountId};
             obj.validAccounts.push(account);
             obj.accountsToCache.push(account);
             obj.namesFromCacheCount++;
             obj.verifiedAccounts = true;
         } else {
-            obj.accountsToCheckInMongoDB.push({name: name_.toLowerCase()});
+            obj.accountsToCheckInMongoDB.push({name: name_});
         }
     }))
 
@@ -58,7 +63,7 @@ _checkNamesInMongoDB = async (obj) => {
         const queryBuilder = new MongoQueryBuilder();
         obj.accountsToCheckInMongoDB.forEach(name_ => {
             const key = Object.keys(name_)[0];
-            const value = name_.name;
+            const value = name_.name.toLowerCase();
             queryBuilder.addQuery(key, value);
         })
 
@@ -66,7 +71,7 @@ _checkNamesInMongoDB = async (obj) => {
         const dbResults = await mongodb.findMany("PUBG", "Names", query);
         const dbResultsNames = [];
         await dbResults.forEach(doc => {
-            dbResultsNames.push(doc.name.toLowerCase());
+                dbResultsNames.push(doc.name.toLowerCase());
                 obj.namesFromMongoDBCount++;
                 obj.accountsToCheckInMongoDB.forEach(account_ => {
                     if (doc.name === account_.name.toLowerCase()) {
@@ -86,7 +91,7 @@ _checkNamesInMongoDB = async (obj) => {
         //get the difference of the 2 lists.
         obj.accountsToCheckFromAPI = obj.accountsToCheckInMongoDB.filter(x =>
             !dbResultsNames.includes(x.name.toLowerCase())
-        );
+        )
     }
 
     return obj;
@@ -132,6 +137,28 @@ _checkNamesFromPubgApi = async (obj) => {
     }
 
     return obj;
+}
+
+_insertNamesIntoCache = async (obj, ttl) => {
+    if (obj.accountsToCache.length > 0) {
+        await Promise.all(obj.accountsToCache.map(async account => {
+            const name = account.name.toLowerCase();
+            const displayName = account.displayName;
+            const accountId = account.accountId;
+            const cacheObject = {name: name, displayName: displayName, accountId: accountId};
+            console.log("name to insert into cache: ", name, accountId);
+            await cache.insertKey(name, JSON.stringify(cacheObject), ttl);
+        }))
+    }
+}
+
+_insertAccountsIntoDatabase = async (obj) => {
+    if (obj.accountsToMongoDB.length > 0) {
+        const results = await mongodb.insertMany("PUBG", "Names", obj.accountsToMongoDB);
+        console.log("Insert account info status: ", results.acknowledged,);
+        console.log("Inserted count: ", results.insertedCount,);
+        console.log("Insert ids: ", results.insertedIds);
+    }
 }
 
 module.exports = AccountVerificationHandler;

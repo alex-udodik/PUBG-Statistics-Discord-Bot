@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const CacheSingleton = require('./utility/cache/redis-cache-singleton');
 const MongodbSingleton = require('./utility/database/mongodb-singleton');
-const AccountVerificationHandler = require('./account-authentication/authenticate');
+const AccountVerificationHandler = require('./api/account-authentication');
 const app = express();
 const port = 3000;
 
@@ -17,13 +17,16 @@ app.get('/', function(req, res) {
 });
 
 app.post('/api/unranked/stats', async function(req, res) {
-    console.log(req.body.names);
+    console.log("Receiving names: ", req.body.names);
     var accounts = req.body.names;
     var accountVerification = new AccountVerificationHandler(accounts);
     const obj = await accountVerification.verifyAccounts();
-    //console.log(obj);
+    const response = {
+        validAccounts: obj.validAccounts,
+        invalidAccounts: obj.invalidAccounts
+    }
 
-    res.send(JSON.stringify(req.body));
+    res.send(response);
 });
 
 app.post('/api/ranked/stats', function(req, res) {
