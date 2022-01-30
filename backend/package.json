@@ -9,6 +9,11 @@
   "author": "AlexUdodik",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.2"
+    "body-parser": "^1.19.1",
+    "dotenv": "^14.3.2",
+    "express": "^4.17.2",
+    "mongodb": "^4.3.1",
+    "node-fetch": "^3.2.0",
+    "redis": "^4.0.2"
   }
 }
