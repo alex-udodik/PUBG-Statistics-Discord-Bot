@@ -22,7 +22,8 @@ app.get('/', function(req, res) {
 app.post('/api/unranked/stats', async function(req, res) {
     console.log("Receiving names: ", req.body.names);
 
-    if (!vl.validateJSON(req.body)) {res.send({statusCode: 400, message: "Missing names array or is empty."})}
+    console.log("Validation results: ", vl.validateJSON(req.body));
+    if (vl.validateJSON(req.body) !== true) {res.send({statusCode: 400, message: "Missing names array or is empty."})}
     else {
         var accounts = req.body.names;
         var accountVerification = new AccountVerificationHandler(accounts);
