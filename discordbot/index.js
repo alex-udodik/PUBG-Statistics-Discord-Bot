@@ -68,17 +68,3 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.login(process.env.BOT_TOKEN);
-
-(async () => {
-    
-    var cache = CacheSingleton.getInstance();
-    cache.on('error', (err) => console.log('Redis Client Error', err));
-    try {
-        await cache.connect();
-        var mongodb = MongodbSingleton.getInstance();
-        await mongodb.connect();
-
-    } catch (error) {
-        console.log("Error: ", error);
-    }
-})();
