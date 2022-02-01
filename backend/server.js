@@ -5,6 +5,8 @@ const CacheSingleton = require('./utility/cache/redis-cache-singleton');
 const MongodbSingleton = require('./utility/database/mongodb-singleton');
 const AccountVerificationHandler = require('./api/account-authentication');
 const vl = require('./api/req-body-validator');
+const stats = require('./api/fetch-stats');
+
 const app = express();
 const port = 3000;
 
@@ -25,12 +27,14 @@ app.post('/api/unranked/stats', async function(req, res) {
         var accounts = req.body.names;
         var accountVerification = new AccountVerificationHandler(accounts);
         const obj = await accountVerification.verifyAccounts();
-        const response = {
-            validAccounts: obj.validAccounts,
-            invalidAccounts: obj.invalidAccounts
+        const fetchedStats = await stats.fetchStats(obj, "lifetime", "squad-fpp", false);
+        
+        if (fetchedStats instanceof Error) { res.send({statusCode: 502, message: "Failed to fetch stats from Pubg api"})}
+        else {
+            const response = {validAccounts: obj.validAccounts, invalidAccounts: obj.invalidAccounts}
+            res.send(response);
         }
-    
-        res.send(response);
+        
     }
 });
 

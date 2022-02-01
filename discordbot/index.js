@@ -3,8 +3,6 @@ const { Routes } = require('discord-api-types/v9');
 const { Client, Intents, Collection } = require('discord.js');
 const fs = require('fs');
 const dotenv = require('dotenv');
-const CacheSingleton = require('./utility/cache/redis-cache-singleton');
-const MongodbSingleton = require('./utility/database/mongodb-singleton');
 
 dotenv.config();
 

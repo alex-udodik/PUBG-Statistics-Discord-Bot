@@ -146,7 +146,7 @@ _insertNamesIntoCache = async (obj, ttl) => {
             const displayName = account.displayName;
             const accountId = account.accountId;
             const cacheObject = {name: name, displayName: displayName, accountId: accountId};
-            console.log("name to insert into cache: ", name, accountId);
+            console.log("Name to insert into cache: ", name, accountId);
             await cache.insertKey(name, JSON.stringify(cacheObject), ttl);
         }))
     }
@@ -155,7 +155,7 @@ _insertNamesIntoCache = async (obj, ttl) => {
 _insertAccountsIntoDatabase = async (obj) => {
     if (obj.accountsToMongoDB.length > 0) {
         const results = await mongodb.insertMany("PUBG", "Names", obj.accountsToMongoDB);
-        console.log("Insert account info status: ", results.acknowledged,);
+        console.log("Insert account into MongoDB 'PUBG' | 'Names' info status: ", results.acknowledged,);
         console.log("Inserted count: ", results.insertedCount,);
         console.log("Insert ids: ", results.insertedIds);
     }
