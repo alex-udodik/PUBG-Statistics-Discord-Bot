@@ -16,14 +16,15 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/', function(req, res) {
-    res.send('Hello World!')
+    res.send({message: "Hello World!"})
 });
 
 app.post('/api/unranked/stats', async function(req, res) {
     console.log("Receiving names: ", req.body.names);
 
     console.log("Validation results: ", vl.validateJSON(req.body));
-    if (vl.validateJSON(req.body) !== true) {res.send({statusCode: 400, message: "Missing names array or is empty."})}
+    const parsingErrorObj = vl.validateJSON(req.body);
+    if (parsingErrorObj !== true) {res.send(parsingErrorObj)}
     else {
         var accounts = req.body.names;
         var accountVerification = new AccountVerificationHandler(accounts);
@@ -35,7 +36,6 @@ app.post('/api/unranked/stats', async function(req, res) {
             const response = {validAccounts: obj.validAccounts, invalidAccounts: obj.invalidAccounts}
             res.send(response);
         }
-        
     }
 });
 

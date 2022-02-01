@@ -4,7 +4,7 @@ const APIError = require('../../errors/APIError')
 module.exports = {
 
 
-    fetchData: async function (url, timeout) {
+    fetchData: async function (url, timeout, payload) {
 
         const AbortController = globalThis.AbortController || await import('abort-controller')
         const controller = new AbortController();
@@ -15,25 +15,20 @@ module.exports = {
 
         var getHeaders = function () {
             return {
-                method: "GET",
+                method: "POST",
                 signal: controller.signal,
-                headers: {
-                    'Authorization': `Bearer ${process.env.PUBG_API_KEY}`,
-                    'Accept': 'application/vnd.api+json',
-                }, 
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
             }
         }
 
         const headers = getHeaders();
         return await fetch(url, headers)
             .then(res => {
-                if (res.status === 429) {
-                    console.log("API Response Status: ", res.status);
-                    throw new APIError("Too many requests.");
-                }
-
+                console.log("res: ", res);
                 return res.json();
             }).then(body => {
+                console.log("body: ", body);
                 return body;
             }).catch(err => {
                 console.log("error from api: ", err.type);
