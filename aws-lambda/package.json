@@ -1,0 +1,11 @@
+{
+  "name": "aws-lambda",
+  "version": "1.0.0",
+  "description": "A function that queries the pubg api and fetches season information which will then store/update this information into mongoDB.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "AlexUdodik",
+  "license": "ISC"
+}
