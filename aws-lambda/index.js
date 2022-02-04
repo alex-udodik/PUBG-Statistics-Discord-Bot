@@ -51,6 +51,7 @@ const fetchData = async (url, timeout) => {
         var count = await seasonsCursor.count();
         if (count === 0) {
             const results = await fetchData(`https://api.pubg.com/shards/steam/seasons`, 5000);
+            if (results instanceof Error) {console.log("error fetching seasons from pubg api"); return;}
             if ('data' in results) {
                 var documents = [];
                 results.data.forEach(seasonObj => {
@@ -70,6 +71,7 @@ const fetchData = async (url, timeout) => {
         else {
             console.log("seasons already in mongodb");
             const results = await fetchData(`https://api.pubg.com/shards/steam/seasons`, 5000);
+            if (results instanceof Error) {console.log("error fetching seasons from pubg api"); return;}
             if ('data' in results) {
                 var seasonDocument = {
                     type: "", id: "", isCurrentSeason: false, isOffseason: false
