@@ -9,6 +9,7 @@
   "author": "AlexUdodik",
   "license": "ISC",
   "dependencies": {
+    "abort-controller": "^3.0.0",
     "dotenv": "^15.0.0",
     "mongodb": "^4.3.1",
     "node-fetch": "^2.6.7"

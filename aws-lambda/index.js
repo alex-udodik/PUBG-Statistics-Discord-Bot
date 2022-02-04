@@ -1,13 +1,14 @@
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const { MongoClient } = require('mongodb');
+const AbortController = require("abort-controller")
 
 dotenv.config();
 
 const fetchData = async (url, timeout) => {
 
-    const AbortController = globalThis.AbortController || await import('abort-controller')
-    const controller = new AbortController();
+    const controller = new AbortController()
+    const signal = controller.signal
 
     const timeout_ = setTimeout(() => {
         controller.abort();
@@ -16,7 +17,7 @@ const fetchData = async (url, timeout) => {
     var getHeaders = function () {
         return {
             method: "GET",
-            signal: controller.signal,
+            signal: signal,
             headers: {
                 'Authorization': `Bearer ${process.env.PUBG_API_KEY}`,
                 'Accept': 'application/vnd.api+json',
@@ -37,8 +38,7 @@ const fetchData = async (url, timeout) => {
         });
 }
 
-(async () => {
-
+exports.handler = async(event) => {
     var url = `mongodb+srv://${process.env.MONGO_DB_USERNAME}:${process.env.MONGO_DB_PASSWORD}@clusterdev0.pcdo6.mongodb.net/test`;
     const client = new MongoClient(url);
     try {
@@ -118,4 +118,4 @@ const fetchData = async (url, timeout) => {
     }
 
     console.log("Quiting.");
-})();
+}
