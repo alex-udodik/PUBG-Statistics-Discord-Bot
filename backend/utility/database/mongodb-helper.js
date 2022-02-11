@@ -39,7 +39,7 @@ module.exports = {
     findMany: async function (database, collection, query, options) {
         try {
             const mongodbCollection = getCollection(database, collection);
-            return await mongodbCollection.find(query);
+            return await mongodbCollection.find(query, options);
         } catch (error) {
             return error;
         }

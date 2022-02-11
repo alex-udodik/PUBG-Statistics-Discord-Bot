@@ -1,9 +1,8 @@
 
-class MongoQueryBuilder {
+class QueryBuilderOr {
     constructor() {
-        this.query = []
+        this.query = [];
     }
-
     addQuery(key, value) {
         var obj = {};
         obj[key] = value;
@@ -15,4 +14,4 @@ class MongoQueryBuilder {
     }
 }
 
-module.exports = MongoQueryBuilder;
+module.exports = QueryBuilderOr

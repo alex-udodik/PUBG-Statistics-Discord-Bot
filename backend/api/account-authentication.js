@@ -1,11 +1,15 @@
 const cache = require('../utility/cache/redis-cache');
-const MongoQueryBuilder = require('../utility/database/query-builder');
+const QueryBuilderAnd = require('../utility/database/query-builder-and');
+const QueryBuilderOr = require('../utility/database/query-builder-or');
 const mongodb = require('../utility/database/mongodb-helper');
 const api = require('../utility/pubg/api');
+const cacheKey = require('../utility/cache/key-builder')
 
 class AccountVerificationHandler {
-    constructor(names) {
+    constructor(names, shard) {
         this.names = names;
+        this.shard = shard;
+        
         this.obj = {
             validAccounts: [],
             invalidAccounts: [],
@@ -28,24 +32,25 @@ class AccountVerificationHandler {
     }
 
     verifyAccounts = async () => {
-        var obj = await _checkNamesInCache(this.names, this.obj);
-        obj = await _checkNamesInMongoDB(obj);
-        obj = await _checkNamesFromPubgApi(obj);
+        var obj = await _checkNamesInCache(this.names, this.obj, this.shard);
+        obj = await _checkNamesInMongoDB(obj, this.shard);
+        obj = await _checkNamesFromPubgApi(obj, this.shard, this.names);
         console.log(obj)
-        await _insertNamesIntoCache(obj, 1800);
-        await _insertAccountsIntoDatabase(obj);
+        await _insertNamesIntoCache(obj, 1800, this.shard);
+        await _insertAccountsIntoDatabase(obj, this.shard);
         return obj;
     }
 }
 
-_checkNamesInCache = async (names, obj) => {
+_checkNamesInCache = async (names, obj, shard) => {
     await Promise.all(names.map(async name_ => {
         const name = name_.toLowerCase();
-        const value = await cache.verifyKey(name);
+        const key = cacheKey.buildKey([shard, name]);
+        const value = await cache.verifyKey(key);
         if (value !== null) {
             console.log("FOUND IN CACHE: ", value);
             const result = await JSON.parse(value)
-            const account = {name: name, displayName: result.displayName, accountId: result.accountId};
+            const account = {name: name, displayName: result.displayName, accountId: result.accountId, shard: shard};
             obj.validAccounts.push(account);
             obj.accountsToCache.push(account);
             obj.namesFromCacheCount++;
@@ -58,16 +63,24 @@ _checkNamesInCache = async (names, obj) => {
     return obj;
 }
 
-_checkNamesInMongoDB = async (obj) => {
+_checkNamesInMongoDB = async (obj, shard) => {
     if (obj.accountsToCheckInMongoDB.length > 0) {
-        const queryBuilder = new MongoQueryBuilder();
+        const queryNames = new QueryBuilderOr();
         obj.accountsToCheckInMongoDB.forEach(name_ => {
             const key = Object.keys(name_)[0];
             const value = name_.name.toLowerCase();
-            queryBuilder.addQuery(key, value);
+            queryNames.addQuery(key, value);
         })
 
-        const query = queryBuilder.build();
+        const queryShard = new QueryBuilderOr();
+        queryShard.addQuery("shard", shard);
+
+        const queryBuilderAnd = new QueryBuilderAnd();
+        queryBuilderAnd.addOr(queryNames.build());
+        queryBuilderAnd.addOr(queryShard.build());
+        const query = queryBuilderAnd.build();
+
+        console.log("QUERY BUILDER: ", JSON.stringify(query))
         const dbResults = await mongodb.findMany("PUBG", "Names", query);
         const dbResultsNames = [];
         await dbResults.forEach(doc => {
@@ -78,7 +91,8 @@ _checkNamesInMongoDB = async (obj) => {
                         const account = {
                             name: account_.name.toLowerCase(),
                             displayName: doc.displayName,
-                            accountId: doc.accountId
+                            accountId: doc.accountId,
+                            shard: shard
                         };
                         obj.validAccounts.push(account);
                         obj.accountsToCache.push(account);
@@ -97,9 +111,9 @@ _checkNamesInMongoDB = async (obj) => {
     return obj;
 }
 
-_checkNamesFromPubgApi = async (obj) => {
+_checkNamesFromPubgApi = async (obj, shard, names) => {
     if (obj.accountsToCheckFromAPI.length > 0) {
-        var urlPreJoin = ['https://api.pubg.com/shards/steam/players?filter[playerNames]='];
+        var urlPreJoin = [`https://api.pubg.com/shards/${shard}/players?filter[playerNames]=`];
         obj.accountsToCheckFromAPI.forEach(account => {
             const name = account.name;
             urlPreJoin.push(`${name},`);
@@ -120,39 +134,42 @@ _checkNamesFromPubgApi = async (obj) => {
                     const account = {
                         name: accountDataFromAPI.attributes.name.toLowerCase(),
                         displayName: accountDataFromAPI.attributes.name,
-                        accountId: accountDataFromAPI.id
+                        accountId: accountDataFromAPI.id,
+                        shard: shard
                     };
                     obj.validAccounts.push(account);
                     obj.accountsToMongoDB.push(account);
                     obj.accountsToCache.push(account);
                 }
             })
-            obj.accountsToCheckFromAPI.forEach(name_ => {
-                if (name_.name.toLowerCase() !== accountDataFromAPI.attributes.name.toLowerCase()) {
-                    const name = {name: name_.name};
-                    obj.invalidAccounts.push(name);
-                }
-            })
         });
+
+        var invalidAccounts = names.filter(x =>
+            !obj.validAccounts.find(z => x.toLowerCase() === z.name.toLowerCase())
+        )
+        invalidAccounts.forEach(x => {
+            obj.invalidAccounts.push({name: x})
+        })
     }
 
     return obj;
 }
 
-_insertNamesIntoCache = async (obj, ttl) => {
+_insertNamesIntoCache = async (obj, ttl, shard) => {
     if (obj.accountsToCache.length > 0) {
         await Promise.all(obj.accountsToCache.map(async account => {
             const name = account.name.toLowerCase();
             const displayName = account.displayName;
             const accountId = account.accountId;
-            const cacheObject = {name: name, displayName: displayName, accountId: accountId};
-            console.log("Name to insert into cache: ", name, accountId);
-            await cache.insertKey(name, JSON.stringify(cacheObject), ttl);
+            const cacheObject = {name: name, displayName: displayName, accountId: accountId, shard: shard};
+            const key = cacheKey.buildKey([shard, name]);
+            console.log("Name to insert into cache: ", key, accountId);
+            await cache.insertKey(key, JSON.stringify(cacheObject), ttl);
         }))
     }
 }
 
-_insertAccountsIntoDatabase = async (obj) => {
+_insertAccountsIntoDatabase = async (obj, shard) => {
     if (obj.accountsToMongoDB.length > 0) {
         const results = await mongodb.insertMany("PUBG", "Names", obj.accountsToMongoDB);
         console.log("Insert account into MongoDB 'PUBG' | 'Names' info status: ", results.acknowledged,);

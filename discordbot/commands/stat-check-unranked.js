@@ -5,8 +5,38 @@ const statsParser = require('../commands-helper/stats-parser');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('stat-check')
-        .setDescription('Shows the stats of a pubg player')
+        .setName('stat-check-unranked')
+        .setDescription('Shows the unranked stats of up to 10 PUBG players')
+        .addStringOption(option =>
+            option
+                .setName('platform')
+                .setDescription('This will search for players playing on this specific platform.')
+                .setRequired(true)
+                .addChoice("Steam", "steam")
+                .addChoice("Playstation", "psn")
+                .addChoice("Xbox", "xbox")
+                .addChoice("Kakao", "kakao")
+                .addChoice("Stadia", "stadia")
+        )
+        .addStringOption(option =>
+            option
+                .setName('season')
+                .setDescription('Use latest for current season. Use /seasons for list of seasons. ')
+                .setRequired(true)
+        )
+        .addStringOption(option =>
+            option
+                .setName("game-mode")
+                .setDescription("Choose a game-mode")
+                .setRequired(true)
+                .addChoice("FPP Squad", "squad-fpp")
+                .addChoice("FPP Duo", "duo-fpp")
+                .addChoice("FPP Solo", "solo-fpp")
+                .addChoice("TPP Squad", "squad")
+                .addChoice("TPP Duo", "duo")
+                .addChoice("TPP Solo", "solo")
+
+        )
         .addStringOption(option =>
             option
                 .setName('names')
@@ -25,18 +55,18 @@ module.exports = {
             await interaction.editReply(`Exceeded number of names. (Max 10)`)
             return;
         }
+        const shard = interaction.options.getString('platform');
+        const season = interaction.options.getString('season');
+        const gameMode = interaction.options.getString('game-mode');
+        
 
-        const payload = {
-            names: names,
-            type: {
-                "ranked": false,
-                "season": "lifetime",
-                "gameMode": "squad-fpp"
-            }
-        }
-
-        const url = 'http://localhost:3000/api/unranked/stats';
-        const response = await api.fetchData(url, 7500, payload);
+        const urlPreJoin = [`http://localhost:3000/api/shard/${shard}/seasons/${season}/gameMode/${gameMode}/players?array=`];
+        names.forEach(name => {
+            urlPreJoin.push(`${name},`)
+        })
+        var urlComma = urlPreJoin.join("");
+        const url = urlComma.slice(0, -1);
+        const response = await api.fetchData(url, 9999999, "GET");
 
         if ('APIError' in response) {
             const details = response.details;

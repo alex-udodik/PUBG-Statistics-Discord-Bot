@@ -4,8 +4,8 @@ const dotenv = require('dotenv');
 const CacheSingleton = require('./utility/cache/redis-cache-singleton');
 const MongodbSingleton = require('./utility/database/mongodb-singleton');
 const AccountVerificationHandler = require('./api/account-authentication');
-const vl = require('./api/req-body-validator');
 const stats = require('./api/fetch-stats');
+const seasons = require('./api/seasons');
 
 const app = express();
 const port = 3000;
@@ -13,37 +13,61 @@ const port = 3000;
 dotenv.config();
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 
-app.get('/', function(req, res) {
+app.get('/', function (req, res) {
     res.send({message: "Hello World!"})
 });
 
-app.post('/api/unranked/stats', async function(req, res) {
-    console.log("Receiving names: ", req.body.names);
+app.get('/api/shards/:shard/players/:player/seasons/:season/ranked', async function (req, res) {
+    const shard = req.params.shard;
+    const season = req.params.season;
+    const player = req.params.player
 
-    console.log("Validation results: ", vl.validateJSON(req.body));
-    const parsingErrorObj = vl.validateJSON(req.body);
-    if (parsingErrorObj !== true) {res.send(parsingErrorObj)}
-    else {
-        var accounts = req.body.names;
-        var accountVerification = new AccountVerificationHandler(accounts);
-        const obj = await accountVerification.verifyAccounts();
-        const fetchedStats = await stats.fetchStats(obj, "lifetime", "squad-fpp", false);
-        
-        if (fetchedStats instanceof Error) { res.send({statusCode: 502, message: "Failed to fetch stats from Pubg api"})}
-        else {
-            const response = {validAccounts: obj.validAccounts, invalidAccounts: obj.invalidAccounts}
-            res.send(response);
-        }
+    var accountVerification = new AccountVerificationHandler([player]);
+    const obj = await accountVerification.verifyAccounts();
+    const fetchedStats = await stats.fetchStats(obj, shard, season, null, true);
+    if (fetchedStats instanceof Error) {
+        res.send({statusCode: 502, message: "Failed to fetch stats from Pubg api"})
+    } else {
+        const response = {validAccounts: obj.validAccounts, invalidAccounts: obj.invalidAccounts}
+        res.send(response);
     }
+
+    console.log("Query: ", shard, season, player);
 });
 
-app.post('/api/ranked/stats', function(req, res) {
-    res.send("ranked stats!");
+app.get('/api/shard/:shard/seasons/:season/gameMode/:gameMode/players', async function (req, res) {
+    const shard = req.params.shard;
+    const season = req.params.season;
+    const gameMode = req.params.gameMode;
+    const players = req.query.array.split(",");
+
+    console.log("Received player names: ", players);
+    var accountVerification = new AccountVerificationHandler(players, shard, season, gameMode);
+    const obj = await accountVerification.verifyAccounts();
+
+    //verify season. It could be in cache.
+    const fetchedStats = await stats.fetchStats(obj, shard, season, gameMode, false);
+
+    if (fetchedStats instanceof Error) {
+        res.send({statusCode: 502, message: "Failed to fetch stats from Pubg api"})
+    } else {
+        const response = {validAccounts: obj.validAccounts, invalidAccounts: obj.invalidAccounts}
+        res.send(response);
+    }
+    console.log("Query: ", shard, season, gameMode, players);
 });
 
-app.listen(port, function() {
+app.get('/api/shard/:shard/seasons', async function (req, res) {
+
+    const shard = req.params.shard;
+    const results = await seasons.fetchSeasons(shard);
+
+    res.send(JSON.stringify(results));
+});
+
+app.listen(port, function () {
     console.log(`Listening on port ${port}!`)
 });
 

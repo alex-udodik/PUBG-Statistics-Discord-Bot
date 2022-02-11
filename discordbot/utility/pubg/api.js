@@ -4,7 +4,7 @@ const APIError = require('../../errors/APIError')
 module.exports = {
 
 
-    fetchData: async function (url, timeout, payload) {
+    fetchData: async function (url, timeout, payload, method) {
 
         const AbortController = globalThis.AbortController || await import('abort-controller')
         const controller = new AbortController();
@@ -14,12 +14,16 @@ module.exports = {
         }, timeout);
 
         var getHeaders = function () {
-            return {
-                method: "POST",
+            var header = {
+                method: method,
                 signal: controller.signal,
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
             }
+
+            if (payload === true) {header.body = JSON.stringify(payload)}
+
+            console.log("Header: ", header);
+            return header;
         }
 
         const headers = getHeaders();
