@@ -8,16 +8,29 @@ module.exports = {
 
     fetchStats: async function (obj, shard, season, gameMode, ranked) {
 
-        obj = objInit(obj, shard, season, gameMode, ranked);
-        obj = createKeys(obj);
-        obj = await checkInCache(obj);
+        if (obj.validAccounts.length > 0) {
+            obj = objInit(obj, shard, season, gameMode, ranked);
+            obj = createKeys(obj);
 
-        if (obj.statsToCheckInMongo.length === 0) { console.log("Found everything in cache, returning..."); return obj;}
+            //TODO: error handling
+            obj = await checkInCache(obj);
 
-        obj = await checkInMongo(obj);
-        if (obj.statsToFetchFromApi.length === 0) {console.log("Found everything from cache and mongodb, returning..."); return obj;}
+            if (obj.statsToCheckInMongo.length === 0) {
+                console.log("Found everything in cache, returning...");
+                return obj;
+            }
 
-        obj = await getStatsFromApi(obj);
+            //TODO: error handling
+            obj = await checkInMongo(obj);
+            if (obj.statsToFetchFromApi.length === 0) {
+                console.log("Found everything from cache and mongodb, returning...");
+                return obj;
+            }
+
+            //TODO: error handling
+            obj = await getStatsFromApi(obj);
+            return obj;
+        }
         return obj;
     }
 }
@@ -44,7 +57,7 @@ createKeys = (obj) => {
         var key;
 
         if (ranked) {
-            key = cacheKey.buildKey([shard, season, accountId])
+            key = cacheKey.buildKey([shard, season, gameMode, accountId, "ranked"])
         } else {
             key = cacheKey.buildKey([shard, season, gameMode, accountId])
         }
@@ -60,6 +73,8 @@ checkInCache = async (obj) => {
         const result = await cache.verifyKey(key)
         if (result !== null) {
             console.log("Found stats in cache for: ", key);
+
+            //TODO: error handling
             const parsedResult = await JSON.parse(result)
             obj.validAccounts[0].rawStats = parsedResult.stats;
         } else {
@@ -98,6 +113,8 @@ checkInMongo = async (obj) => {
     })
 
     const query = queryBuilderOr.build();
+
+    //TODO: error handling
     const mongoResults = await mongodb.findMany("PUBG", "PlayerStats", query);
 
     console.log("Mongo query: ", query);
@@ -148,21 +165,38 @@ getStatsFromApi = async (obj) => {
     console.log(url);
 
     if ('errors' in results) {
+        //TODO: return object and error details
         return {APIError: true, details: "Fetching stats"}
     }
     if (results instanceof Error) {
+        //TODO: return object and error details
         return {APIError: true, details: "PUBG API"}
     } else {
         var documents = [];
 
         obj.validAccounts.forEach(account => {
             //TODO: fix for ranked. Ranked uses an object instead of an array?
-            results.data.forEach(stats_ => {
 
-                if (obj.query.ranked) {
+            var document = {}
 
+            if (obj.query.ranked) {
+                const gameMode = obj.query.gameMode;
+                const stats = results.data.attributes.rankedGameModeStats[gameMode];
+                document = {
+                    key: obj.statsKeys[0],
+                    accountId: account.accountId,
+                    name: account.name,
+                    displayName: account.displayName,
+                    shard: shard,
+                    season: season,
+                    gameMode: gameMode,
+                    ranked: obj.query.ranked,
+                    stats: stats
                 }
-                else {
+                account.rawStats = stats
+                obj.statsToCache.push({key: obj.statsKeys[0], value: JSON.stringify(document)});
+            } else {
+                results.data.forEach(stats_ => {
                     var accountIdFromAPI = stats_.relationships.player.data.id;
                     var accountIdInput = account.accountId;
 
@@ -170,17 +204,22 @@ getStatsFromApi = async (obj) => {
                         account.rawStats = stats_.attributes.gameModeStats[gameMode];
 
                         const key = cacheKey.buildKey([shard, season, gameMode, accountIdFromAPI])
-                        const document = {
+                        document = {
                             key: key,
                             accountId: accountIdFromAPI,
+                            name: account.name,
+                            displayName: account.displayName,
+                            shard: shard,
+                            season: season,
+                            gameMode: gameMode,
+                            ranked: obj.query.ranked,
                             stats: stats_.attributes.gameModeStats[gameMode]
                         }
-
-                        documents.push(document)
                         obj.statsToCache.push({key: key, value: JSON.stringify(document)});
                     }
-                }
-            })
+                })
+            }
+            documents.push(document)
         })
 
         await insertStatsIntoMongo(documents, season);
@@ -197,7 +236,7 @@ insertStatsIntoCache = async (key, value, ttl) => {
     await cache.insertKey(key, value, ttl)
 }
 insertStatsIntoMongo = async (documents, season) => {
-    if (season !== "lifetime"){
+    if (season !== "lifetime") {
         await mongodb.insertMany("PUBG", "PlayerStats", documents);
     }
 }

@@ -1,7 +1,8 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
+const { MessageEmbed, MessageAttachment } = require('discord.js');
 const api = require('../utility/pubg/api');
 const statsParser = require('../commands-helper/stats-parser');
+const rankedIconGetter = require('../commands-helper/ranked-icon-getter');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -26,7 +27,17 @@ module.exports = {
                 .setDescription('Use latest for current season. Use /seasons for list of seasons. ')
                 .setRequired(true)
         )
-    
+        .addStringOption(option =>
+            option
+                .setName("game-mode")
+                .setDescription("Choose a game-mode")
+                .setRequired(true)
+                .addChoice("FPP Squad", "squad-fpp")
+                .addChoice("FPP Solo", "solo-fpp")
+                .addChoice("TPP Squad", "squad")
+                .addChoice("TPP Solo", "solo")
+
+        )
         .addStringOption(option =>
             option
                 .setName('name')
@@ -47,9 +58,10 @@ module.exports = {
         }
         const shard = interaction.options.getString('platform');
         const season = interaction.options.getString('season');
-        
-        const url = `http://localhost:3000/api/shards/${shard}/players/${names[0]}/seasons/${season}/ranked`;
-        const response = await api.fetchData(url, 7500, "GET");
+        const gameMode = interaction.options.getString('game-mode');
+
+        const url = `http://localhost:3000/api/shards/${shard}/players/${names[0]}/seasons/${season}/gameMode/${gameMode}/ranked`;
+        const response = await api.fetchData(url, 999999, "GET");
 
         if ('APIError' in response) {
             const details = response.details;
@@ -57,51 +69,50 @@ module.exports = {
             return;
         }
 
+        var attachment;
+
         var embed = new MessageEmbed();
         if (response.validAccounts.length > 0) {
-            response.validAccounts.forEach(account => {
 
+            await Promise.all(response.validAccounts.map(async account => {
                 //TODO: getCalculatedStats for ranked stats. (Different than unranked)
                 console.log("stats: ", account.rawStats);
-                account.calcedStats = statsParser.getCalculatedStats(account.rawStats);
+                account.calcedStats = statsParser.getCalculatedStatsRanked(account.rawStats);
                 var item = [];
                 for (const [key, value] of Object.entries(account.calcedStats)) {
                     item.push(`${key}: ${value}\n`);
                 }
                 const value = item.join("");
                 const field = { name: account.name, value: value, inline: true }
+
+                const filePath = await rankedIconGetter.get(account.calcedStats.currentRankPoint)
+                attachment = new MessageAttachment(filePath);
+                const pathSplit = await String(filePath).split("/")
+                const img = await pathSplit[pathSplit.length - 1]
+
+                embed.setThumbnail(`attachment://${img}`);
                 embed.addFields(field);
-            })
+            }))
+
         }
 
-        
-        const fail_message = "Accounts failed fetch from API (DNE or missing upper/lower case):";
-        var namesThatFailedLookUp = [];
-
-        if (response.validAccounts.length > 0 && response.invalidAccounts.length === 0) {
-            embed.setTitle("Stats");
-        }
-        else if (response.validAccounts.length > 0 && response.invalidAccounts.length > 0) {
-            var footer = [fail_message];
-
-            response.invalidAccounts.forEach(name_ => {
-                namesThatFailedLookUp.push(`\n\u2022${name_.name}`);
-            })
-
-            footer.push.apply(footer, namesThatFailedLookUp);
-            embed.setFooter({ text: footer.join("") });
-            embed.setTitle("Stats");
-        }
         else {
+            const fail_message = "Accounts failed fetch from API (DNE or missing upper/lower case):";
+            namesThatFailedLookUp = [];
             response.invalidAccounts.forEach(name_ => {
                 namesThatFailedLookUp.push(`\n\u2022${name_.name}`);
             })
             embed.setTitle(fail_message);
             embed.setDescription(namesThatFailedLookUp.join(""));
+
+            await interaction.editReply(
+                { embeds: [embed]}
+            )
+            return;
         }
 
         await interaction.editReply(
-            { embeds: [embed] }
+            { embeds: [embed], files:  [attachment]}
         )
     }
 }

@@ -37,6 +37,11 @@ module.exports = {
         return parseFloat(parseFloat(headshotKills) / parseFloat(totalKills))
     },
 
+    getKd: function(kills, deaths) {
+        return parseFloat(parseFloat(kills) / parseFloat(deaths));
+    },
+
+
     getRatRating: function(timeSurvived, winRatio, adr, avg_walk, avg_drive) {
         //(((TimeSurvived)(1+Win%))ADR)/(Avg_Walk+Avg_Drive)*10
         const rating = ((((timeSurvived) * (1 + winRatio))) * adr) / ((avg_walk + avg_drive) * 10);

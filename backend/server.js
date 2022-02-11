@@ -19,14 +19,15 @@ app.get('/', function (req, res) {
     res.send({message: "Hello World!"})
 });
 
-app.get('/api/shards/:shard/players/:player/seasons/:season/ranked', async function (req, res) {
+app.get('/api/shards/:shard/players/:player/seasons/:season/gameMode/:gameMode/ranked', async function (req, res) {
     const shard = req.params.shard;
     const season = req.params.season;
-    const player = req.params.player
+    const gameMode = req.params.gameMode;
+    const player = req.params.player;
 
-    var accountVerification = new AccountVerificationHandler([player]);
+    var accountVerification = new AccountVerificationHandler([player], shard);
     const obj = await accountVerification.verifyAccounts();
-    const fetchedStats = await stats.fetchStats(obj, shard, season, null, true);
+    const fetchedStats = await stats.fetchStats(obj, shard, season, gameMode, true);
     if (fetchedStats instanceof Error) {
         res.send({statusCode: 502, message: "Failed to fetch stats from Pubg api"})
     } else {
@@ -44,10 +45,9 @@ app.get('/api/shard/:shard/seasons/:season/gameMode/:gameMode/players', async fu
     const players = req.query.array.split(",");
 
     console.log("Received player names: ", players);
-    var accountVerification = new AccountVerificationHandler(players, shard, season, gameMode);
+    var accountVerification = new AccountVerificationHandler(players, shard);
     const obj = await accountVerification.verifyAccounts();
 
-    //verify season. It could be in cache.
     const fetchedStats = await stats.fetchStats(obj, shard, season, gameMode, false);
 
     if (fetchedStats instanceof Error) {
