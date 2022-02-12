@@ -67,7 +67,10 @@ module.exports = {
             await interaction.editReply(`There was an error involving ${details}`)
             return;
         }
-
+        if ('failedSeasonValidation' in response) {
+            await interaction.editReply(`Invalid Season name: ${season} for ${shard}`)
+            return;
+        }
         var attachment;
 
         var embed = new MessageEmbed();

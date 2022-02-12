@@ -28,8 +28,6 @@ module.exports = {
             let name;
             if (typeof options === "undefined") { name = await mongodbCollection.findOne(query, options); }
             else { name = await mongodbCollection.findOne(query); }
-
-            console.log(query, `was able to find: `, name);
             return name;
         } catch (error) {
             return error;

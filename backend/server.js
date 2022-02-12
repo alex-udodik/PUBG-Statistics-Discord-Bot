@@ -28,6 +28,7 @@ app.get('/api/shards/:shard/players/:player/seasons/:season/gameMode/:gameMode/r
 
     const isSeasonValid = await seasonAuthentication.isSeasonValid(season, shard);
     if (!isSeasonValid) {
+        console.log("is season valid: ", isSeasonValid);
         res.send({failedSeasonValidation: true});
         return;
     }

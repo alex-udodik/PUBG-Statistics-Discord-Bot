@@ -75,7 +75,7 @@ module.exports = {
         }
 
         if ('failedSeasonValidation' in response) {
-            await interaction.editReply(`Invalid Season name: ${season}`)
+            await interaction.editReply(`Invalid Season name: ${season} for ${shard}`)
             return;
         }
 
