@@ -63,5 +63,45 @@ module.exports = {
             currentTier_Tier: currentTier_Tier,
             currentTier_subTier: currentTier_subTier
         };
+    },
+
+    getDummyDataRanked: function()  {
+        return {
+            currentTier:{
+                tier: "N/A",
+                subTier: "N/A"
+            },
+            currentRankPoint: -1,
+            bestTier:{
+                tier: "N/A",
+                subTier: "N/A"
+            },
+            bestRankPoint: 0,
+            roundsPlayed: 0,
+            avgRank: 0,
+            avgSurvivalTime: 0,
+            top10Ratio: 0,
+            winRatio: 0,
+            assists: 0,
+            wins: 0,
+            kda: 0,
+            kdr: 0,
+            kills: 0,
+            deaths: 0,
+            roundMostKills: 0,
+            longestKill: 0,
+            headshotKills: 0,
+            headshotKillRatio: 0,
+            damageDealt: 0,
+            dBNOs: 0,
+            reviveRatio: 0,
+            revives: 0,
+            heals: 0,
+            boosts: 0,
+            weaponsAcquired: 0,
+            teamKills: 0,
+            playTime: 0,
+            killStreak: 0,
+        }
     }
 }

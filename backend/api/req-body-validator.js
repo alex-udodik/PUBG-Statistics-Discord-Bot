@@ -6,9 +6,6 @@ module.exports = {
             message: ""
         }
 
-        //TODO: make it so that each object within the body is checked and validated.
-        //      return a response object with a statuscode and message if there is an issue
-        //      otherwise return true
         response.statusCode = 400;
         if (!("names" in body)) {
             response.message = 'Missing "names": [] in body.';

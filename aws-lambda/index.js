@@ -60,7 +60,7 @@ exports.handler = async (event) => {
 
             console.log("Checking if there are any season documents in the season collection.");
             var seasonsCursor = await seasons.find({});
-    
+
             var count = await seasonsCursor.count();
             console.log("Season count: ", count);
             if (count === 0) {
@@ -78,7 +78,7 @@ exports.handler = async (event) => {
                         }
                         documents.push(document);
                     })
-    
+
                     const result = await seasons.insertMany(documents);
                     console.log(`Inserted into Seasons-${value}. Status: `, result.acknowledged);
                 }
@@ -92,16 +92,16 @@ exports.handler = async (event) => {
                         type: "", id: "", isCurrentSeason: false, isOffseason: false
                     }
                     results.data.forEach(seasonObj => {
-                        if (seasonObj.attributes.isCurrentSeason === true && seasonObj.id.includes("pc")) {
+                        if (seasonObj.attributes.isCurrentSeason === true) {
                             seasonDocument.type = seasonObj.type;
                             seasonDocument.id = seasonObj.id;
                             seasonDocument.isCurrentSeason = seasonObj.attributes.isCurrentSeason;
                             seasonDocument.isOffseason = seasonObj.attributes.isOffseason;
                         }
                     })
-    
+
                     const document = await seasons.findOne({ isCurrentSeason: true })
-    
+
                     if (document.id !== seasonDocument.id) {
                         console.log("Found a new season: ", seasonDocument.id);
                         const filter = { id: document.id }
@@ -113,7 +113,7 @@ exports.handler = async (event) => {
                         const options = { upsert: true }
                         const updateDocument = await seasons.updateOne(filter, updateDoc, options);
                         console.log("Is update document successful? ", updateDocument.acknowledged);
-    
+
                         const insertResult = await seasons.insertOne(seasonDocument);
                         console.log("Is new live season mongoDB insertion successful? ", insertResult.acknowledged);
                     }
@@ -121,7 +121,7 @@ exports.handler = async (event) => {
                 }
             }
         }
-        
+
     } catch (error) {
         console.log("ERROR: ", error);
     } finally {

@@ -1,5 +1,5 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed, MessageAttachment } = require('discord.js');
+const {SlashCommandBuilder} = require('@discordjs/builders');
+const {MessageEmbed, MessageAttachment} = require('discord.js');
 const api = require('../utility/pubg/api');
 const statsParser = require('../commands-helper/stats-parser');
 const rankedIconGetter = require('../commands-helper/ranked-icon-getter');
@@ -36,7 +36,6 @@ module.exports = {
                 .addChoice("FPP Solo", "solo-fpp")
                 .addChoice("TPP Squad", "squad")
                 .addChoice("TPP Solo", "solo")
-
         )
         .addStringOption(option =>
             option
@@ -47,7 +46,7 @@ module.exports = {
 
     async execute(interaction) {
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ephemeral: true});
 
         const pubg_name = interaction.options.getString('name');
         const names = pubg_name.split(/[ ,]+/)
@@ -61,7 +60,7 @@ module.exports = {
         const gameMode = interaction.options.getString('game-mode');
 
         const url = `http://localhost:3000/api/shards/${shard}/players/${names[0]}/seasons/${season}/gameMode/${gameMode}/ranked`;
-        const response = await api.fetchData(url, 999999, "GET");
+        const response = await api.fetchData(url, 7500, "GET");
 
         if ('APIError' in response) {
             const details = response.details;
@@ -75,29 +74,28 @@ module.exports = {
         if (response.validAccounts.length > 0) {
 
             await Promise.all(response.validAccounts.map(async account => {
-                //TODO: getCalculatedStats for ranked stats. (Different than unranked)
-                console.log("stats: ", account.rawStats);
-                account.calcedStats = statsParser.getCalculatedStatsRanked(account.rawStats);
+                account.calcedStats = (account.rawStats !== null ?
+                    statsParser.getCalculatedStatsRanked(account.rawStats) :
+                    statsParser.getDummyDataRanked());
                 var item = [];
                 for (const [key, value] of Object.entries(account.calcedStats)) {
                     item.push(`${key}: ${value}\n`);
                 }
                 const value = item.join("");
-                const field = { name: account.name, value: value, inline: true }
+                const field = {name: gameMode, value: value, inline: true}
 
                 const filePath = await rankedIconGetter.get(account.calcedStats.currentRankPoint)
                 attachment = new MessageAttachment(filePath);
                 const pathSplit = await String(filePath).split("/")
                 const img = await pathSplit[pathSplit.length - 1]
 
+                embed.setTitle(`Ranked stats for ${account.displayName}`)
+                embed.setDescription(`Platform: ${shard}\nSeason: ${season}`);
                 embed.setThumbnail(`attachment://${img}`);
                 embed.addFields(field);
             }))
-
-        }
-
-        else {
-            const fail_message = "Accounts failed fetch from API (DNE or missing upper/lower case):";
+        } else {
+            const fail_message = "Account failed fetch from API (DNE or missing upper/lower case):";
             namesThatFailedLookUp = [];
             response.invalidAccounts.forEach(name_ => {
                 namesThatFailedLookUp.push(`\n\u2022${name_.name}`);
@@ -106,13 +104,13 @@ module.exports = {
             embed.setDescription(namesThatFailedLookUp.join(""));
 
             await interaction.editReply(
-                { embeds: [embed]}
+                {embeds: [embed]}
             )
             return;
         }
 
         await interaction.editReply(
-            { embeds: [embed], files:  [attachment]}
+            {embeds: [embed], files: [attachment]}
         )
     }
 }
