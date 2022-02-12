@@ -86,8 +86,8 @@ module.exports = {
 
                 const filePath = await rankedIconGetter.get(account.calcedStats.currentRankPoint)
                 attachment = new MessageAttachment(filePath);
-                const pathSplit = await String(filePath).split("/")
-                const img = await pathSplit[pathSplit.length - 1]
+                const pathSplit = String(filePath).split("/")
+                const img = pathSplit[pathSplit.length - 1]
 
                 embed.setTitle(`Ranked stats for ${account.displayName}`)
                 embed.setDescription(`Platform: ${shard}\nSeason: ${season}`);

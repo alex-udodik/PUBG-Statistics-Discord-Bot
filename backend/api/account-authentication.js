@@ -35,7 +35,6 @@ class AccountVerificationHandler {
         var obj = await _checkNamesInCache(this.names, this.obj, this.shard);
         obj = await _checkNamesInMongoDB(obj, this.shard);
         obj = await _checkNamesFromPubgApi(obj, this.shard, this.names);
-        console.log(obj)
         await _insertNamesIntoCache(obj, 1800, this.shard);
         await _insertAccountsIntoDatabase(obj, this.shard);
         return obj;
@@ -80,7 +79,6 @@ _checkNamesInMongoDB = async (obj, shard) => {
         queryBuilderAnd.addOr(queryShard.build());
         const query = queryBuilderAnd.build();
 
-        console.log("QUERY BUILDER: ", JSON.stringify(query))
         const dbResults = await mongodb.findMany("PUBG", "Names", query);
         const dbResultsNames = [];
         await dbResults.forEach(doc => {
@@ -174,7 +172,6 @@ _insertAccountsIntoDatabase = async (obj, shard) => {
         const results = await mongodb.insertMany("PUBG", "Names", obj.accountsToMongoDB);
         console.log("Insert account into MongoDB 'PUBG' | 'Names' info status: ", results.acknowledged,);
         console.log("Inserted count: ", results.insertedCount,);
-        console.log("Insert ids: ", results.insertedIds);
     }
 }
 

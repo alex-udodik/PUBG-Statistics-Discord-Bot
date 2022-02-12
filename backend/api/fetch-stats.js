@@ -117,7 +117,6 @@ checkInMongo = async (obj) => {
     //TODO: error handling
     const mongoResults = await mongodb.findMany("PUBG", "PlayerStats", query);
 
-    console.log("Mongo query: ", query);
     await mongoResults.forEach(document => {
         obj.validAccounts.forEach(account => {
             if (account.rawStats === null && account.accountId === document.accountId) {
@@ -145,18 +144,6 @@ getStatsFromApi = async (obj) => {
     const shard = obj.query.shard;
     const season = obj.query.season;
     const gameMode = obj.query.gameMode;
-
-    var document = {
-        key: obj.statsKeys[0],
-        accountId: account.accountId,
-        name: account.name,
-        displayName: account.displayName,
-        shard: shard,
-        season: season,
-        gameMode: gameMode,
-        ranked: obj.query.ranked,
-        stats: null
-    }
 
     var url = "";
 
@@ -193,6 +180,18 @@ getStatsFromApi = async (obj) => {
             const query = queryBuilder.build();
             const seasonDoc = await mongodb.findOne("PUBG", `Seasons-${shard}`, query);
 
+            var document = {
+                key: obj.statsKeys[0],
+                accountId: account.accountId,
+                name: account.name,
+                displayName: account.displayName,
+                shard: shard,
+                season: season,
+                gameMode: gameMode,
+                ranked: obj.query.ranked,
+                stats: null
+            }
+
             if (obj.query.ranked) {
 
                 if (gameMode in results.data.attributes.rankedGameModeStats) {
@@ -201,7 +200,7 @@ getStatsFromApi = async (obj) => {
                     account.rawStats = stats
                     obj.statsToCache.push({key: obj.statsKeys[0], value: JSON.stringify(document)});
                 }
-                if (!seasonDoc.isCurrentSeason) {documents.push(document) }
+                if (seasonDoc !== null && !seasonDoc.isCurrentSeason) {documents.push(document) }
             } else {
                 results.data.forEach(stats_ => {
                     var accountIdFromAPI = stats_.relationships.player.data.id;
@@ -212,7 +211,7 @@ getStatsFromApi = async (obj) => {
                         document.stats = stats_.attributes.gameModeStats[gameMode]
                         const key = cacheKey.buildKey([shard, season, gameMode, accountIdFromAPI])
                         obj.statsToCache.push({key: key, value: JSON.stringify(document)});
-                        if (!seasonDoc.isCurrentSeason) {documents.push(document) }
+                        if (seasonDoc !== null && !seasonDoc.isCurrentSeason) {documents.push(document) }
                     }
                 })
             }
@@ -224,7 +223,6 @@ getStatsFromApi = async (obj) => {
         }))
     }
 
-    console.log("OBJ: ", obj);
     return obj;
 }
 

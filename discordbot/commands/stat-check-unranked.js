@@ -74,6 +74,11 @@ module.exports = {
             return;
         }
 
+        if ('failedSeasonValidation' in response) {
+            await interaction.editReply(`Invalid Season name: ${season}`)
+            return;
+        }
+
         var embed = new MessageEmbed();
         if (response.validAccounts.length > 0) {
             response.validAccounts.forEach(account => {

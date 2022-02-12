@@ -6,6 +6,7 @@ const MongodbSingleton = require('./utility/database/mongodb-singleton');
 const AccountVerificationHandler = require('./api/account-authentication');
 const stats = require('./api/fetch-stats');
 const seasons = require('./api/seasons');
+const seasonAuthentication = require('./api/season-authentication');
 
 const app = express();
 const port = 3000;
@@ -25,6 +26,12 @@ app.get('/api/shards/:shard/players/:player/seasons/:season/gameMode/:gameMode/r
     const gameMode = req.params.gameMode;
     const player = req.params.player;
 
+    const isSeasonValid = await seasonAuthentication.isSeasonValid(season, shard);
+    if (!isSeasonValid) {
+        res.send({failedSeasonValidation: true});
+        return;
+    }
+
     var accountVerification = new AccountVerificationHandler([player], shard);
     const obj = await accountVerification.verifyAccounts();
     const fetchedStats = await stats.fetchStats(obj, shard, season, gameMode, true);
@@ -34,8 +41,6 @@ app.get('/api/shards/:shard/players/:player/seasons/:season/gameMode/:gameMode/r
         const response = {validAccounts: obj.validAccounts, invalidAccounts: obj.invalidAccounts}
         res.send(response);
     }
-
-    console.log("Query: ", shard, season, player);
 });
 
 app.get('/api/shard/:shard/seasons/:season/gameMode/:gameMode/players', async function (req, res) {
@@ -44,7 +49,12 @@ app.get('/api/shard/:shard/seasons/:season/gameMode/:gameMode/players', async fu
     const gameMode = req.params.gameMode;
     const players = req.query.array.split(",");
 
-    console.log("Received player names: ", players);
+    const isSeasonValid = await seasonAuthentication.isSeasonValid(season, shard);
+    if (!isSeasonValid) {
+        res.send({failedSeasonValidation: true});
+        return;
+    }
+
     var accountVerification = new AccountVerificationHandler(players, shard);
     const obj = await accountVerification.verifyAccounts();
 
@@ -56,7 +66,6 @@ app.get('/api/shard/:shard/seasons/:season/gameMode/:gameMode/players', async fu
         const response = {validAccounts: obj.validAccounts, invalidAccounts: obj.invalidAccounts}
         res.send(response);
     }
-    console.log("Query: ", shard, season, gameMode, players);
 });
 
 app.get('/api/shard/:shard/seasons', async function (req, res) {
