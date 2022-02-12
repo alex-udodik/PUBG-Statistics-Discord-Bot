@@ -22,7 +22,7 @@ app.get('/', function (req, res) {
 
 app.get('/api/shards/:shard/players/:player/seasons/:season/gameMode/:gameMode/ranked', async function (req, res) {
     const shard = req.params.shard;
-    const season = req.params.season;
+    const season = req.params.season.toLowerCase();
     const gameMode = req.params.gameMode;
     const player = req.params.player;
 
@@ -45,7 +45,7 @@ app.get('/api/shards/:shard/players/:player/seasons/:season/gameMode/:gameMode/r
 
 app.get('/api/shard/:shard/seasons/:season/gameMode/:gameMode/players', async function (req, res) {
     const shard = req.params.shard;
-    const season = req.params.season;
+    const season = req.params.season.toLowerCase();
     const gameMode = req.params.gameMode;
     const players = req.query.array.split(",");
 

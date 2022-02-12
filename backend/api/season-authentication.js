@@ -4,6 +4,8 @@ module.exports = {
 
     isSeasonValid: async function(season, shard) {
 
+        if (season === "lifetime") {return true;}
+
         const query = {id: season};
         const result = await mongo.findOne("PUBG", `Seasons-${shard}`, query)
 
