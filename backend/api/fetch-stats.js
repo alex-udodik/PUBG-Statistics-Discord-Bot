@@ -3,6 +3,7 @@ const cacheKey = require('../utility/cache/key-builder')
 const cache = require('../utility/cache/redis-cache');
 const QueryBuilderOr = require('../utility/database/query-builder-or');
 const mongodb = require('../utility/database/mongodb-helper');
+const APIError = require('../errors/APIError');
 
 module.exports = {
 
@@ -12,7 +13,6 @@ module.exports = {
             obj = objInit(obj, shard, season, gameMode, ranked);
             obj = createKeys(obj);
 
-            //TODO: error handling
             obj = await checkInCache(obj);
 
             if (obj.statsToCheckInMongo.length === 0) {
@@ -20,16 +20,17 @@ module.exports = {
                 return obj;
             }
 
-            //TODO: error handling
             obj = await checkInMongo(obj);
             if (obj.statsToFetchFromApi.length === 0) {
                 console.log("Found everything from cache and mongodb, returning...");
                 return obj;
             }
 
-            //TODO: error handling
-            obj = await getStatsFromApi(obj);
-            return obj;
+            try {
+                obj = await getStatsFromApi(obj);
+            } catch (error) {
+                throw new APIError("Failed to fetch stats from PUBG API");
+            }
         }
         return obj;
     }
@@ -68,21 +69,8 @@ createKeys = (obj) => {
 }
 
 checkInCache = async (obj) => {
-    if (obj.query.ranked) {
-        const key = obj.statsKeys[0];
-        const result = await cache.verifyKey(key)
-        if (result !== null) {
-            console.log("Found stats in cache for: ", key);
-
-            //TODO: error handling
-            const parsedResult = await JSON.parse(result)
-            obj.validAccounts[0].rawStats = parsedResult.stats;
-        } else {
-            obj.statsToCheckInMongo.push(key);
-        }
-
-    } else {
-        await Promise.all(obj.statsKeys.map(async key => {
+    await Promise.all(obj.statsKeys.map(async key => {
+        try {
             const result = await cache.verifyKey(key);
             if (result !== null) {
                 console.log("Found stats in cache for: ", key);
@@ -99,8 +87,11 @@ checkInCache = async (obj) => {
             } else {
                 obj.statsToCheckInMongo.push(key);
             }
-        }))
-    }
+        } catch (error) {
+            obj.statsToCheckInMongo.push(key);
+            console.log(error.message)
+        }
+    }))
 
     return obj;
 }
@@ -114,21 +105,24 @@ checkInMongo = async (obj) => {
 
     const query = queryBuilderOr.build();
 
-    //TODO: error handling
-    const mongoResults = await mongodb.findMany("PUBG", "PlayerStats", query);
+    try {
+        const mongoResults = await mongodb.findMany("PUBG", "PlayerStats", query);
 
-    await mongoResults.forEach(document => {
-        obj.validAccounts.forEach(account => {
-            if (account.rawStats === null && account.accountId === document.accountId) {
-                account.rawStats = document.stats
-                const key = document.key;
-                obj.statsToCache.push({key: key, value: JSON.stringify(document)});
-            }
+        await mongoResults.forEach(document => {
+            obj.validAccounts.forEach(account => {
+                if (account.rawStats === null && account.accountId === document.accountId) {
+                    account.rawStats = document.stats
+                    const key = document.key;
+                    obj.statsToCache.push({key: key, value: JSON.stringify(document)});
+                }
+            })
         })
-    })
+
+    } catch (error) {
+        console.log(error.message)
+    }
 
     obj.statsToFetchFromApi = [];
-
     obj.validAccounts.forEach(account => {
         if (account.rawStats === null) {
             const accountId = account.accountId;
@@ -160,18 +154,21 @@ getStatsFromApi = async (obj) => {
         url = url.slice(0, -1);
     }
 
-    const results = await api.fetchData(url, 5000);
-    console.log(url);
+    var results;
 
+    try {
+        results = await api.fetchData(url, 5000);
+    } catch (error) {
+        throw error;
+    }
+
+    console.log(url);
 
     if ('errors' in results) {
         //TODO: return object and error details
         return {APIError: true, details: "Fetching stats"}
     }
-    if (results instanceof Error) {
-        //TODO: return object and error details
-        return {APIError: true, details: "PUBG API"}
-    } else {
+    else {
         var documents = [];
 
         await Promise.all(obj.validAccounts.map(async account => {
@@ -200,7 +197,9 @@ getStatsFromApi = async (obj) => {
                     account.rawStats = stats
                     obj.statsToCache.push({key: obj.statsKeys[0], value: JSON.stringify(document)});
                 }
-                if (seasonDoc !== null && !seasonDoc.isCurrentSeason) {documents.push(document) }
+                if (seasonDoc !== null && !seasonDoc.isCurrentSeason) {
+                    documents.push(document)
+                }
             } else {
                 results.data.forEach(stats_ => {
                     var accountIdFromAPI = stats_.relationships.player.data.id;
@@ -211,7 +210,9 @@ getStatsFromApi = async (obj) => {
                         document.stats = stats_.attributes.gameModeStats[gameMode]
                         const key = cacheKey.buildKey([shard, season, gameMode, accountIdFromAPI])
                         obj.statsToCache.push({key: key, value: JSON.stringify(document)});
-                        if (seasonDoc !== null && !seasonDoc.isCurrentSeason) {documents.push(document) }
+                        if (seasonDoc !== null && !seasonDoc.isCurrentSeason) {
+                            documents.push(document)
+                        }
                     }
                 })
             }
@@ -219,7 +220,11 @@ getStatsFromApi = async (obj) => {
 
         await insertStatsIntoMongo(documents, season);
         await Promise.all(obj.statsToCache.map(async item => {
-            await cache.insertKey(item.key, item.value, 1800);
+            try {
+                await cache.insertKey(item.key, item.value, 1800);
+            } catch (error) {
+                console.log("failed to insert stats into cache");
+            }
         }))
     }
 
@@ -228,6 +233,11 @@ getStatsFromApi = async (obj) => {
 
 insertStatsIntoMongo = async (documents, season) => {
     if (season !== "lifetime") {
-        await mongodb.insertMany("PUBG", "PlayerStats", documents);
+        try {
+            await mongodb.insertMany("PUBG", "PlayerStats", documents);
+        } catch (error) {
+            console.log("Failed to insert stats into mongodb");
+            console.log(error.message);
+        }
     }
 }

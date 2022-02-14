@@ -6,7 +6,7 @@ const MongodbSingleton = require('./utility/database/mongodb-singleton');
 const AccountVerificationHandler = require('./api/account-authentication');
 const stats = require('./api/fetch-stats');
 const seasons = require('./api/seasons');
-const seasonAuthentication = require('./api/season-authentication');
+const validation = require('./api/get-request-url-validation');
 
 const app = express();
 const port = 3000;
@@ -20,52 +20,52 @@ app.get('/', function (req, res) {
     res.send({message: "Hello World!"})
 });
 
-app.get('/api/shards/:shard/players/:player/seasons/:season/gameMode/:gameMode/ranked', async function (req, res) {
-    const shard = req.params.shard;
+app.get('/api/seasonStats/shard/:shard/seasons/:season/gameMode/:gameMode/ranked/:ranked/players', async function (req, res) {
+    const shard = req.params.shard.toLowerCase();
     const season = req.params.season.toLowerCase();
-    const gameMode = req.params.gameMode;
-    const player = req.params.player;
-
-    const isSeasonValid = await seasonAuthentication.isSeasonValid(season, shard);
-    if (!isSeasonValid) {
-        console.log("is season valid: ", isSeasonValid);
-        res.send({failedSeasonValidation: true});
-        return;
-    }
-
-    var accountVerification = new AccountVerificationHandler([player], shard);
-    const obj = await accountVerification.verifyAccounts();
-    const fetchedStats = await stats.fetchStats(obj, shard, season, gameMode, true);
-    if (fetchedStats instanceof Error) {
-        res.send({statusCode: 502, message: "Failed to fetch stats from Pubg api"})
-    } else {
-        const response = {validAccounts: obj.validAccounts, invalidAccounts: obj.invalidAccounts}
-        res.send(response);
-    }
-});
-
-app.get('/api/shard/:shard/seasons/:season/gameMode/:gameMode/players', async function (req, res) {
-    const shard = req.params.shard;
-    const season = req.params.season.toLowerCase();
-    const gameMode = req.params.gameMode;
+    const gameMode = req.params.gameMode.toLowerCase();
+    var ranked = req.params.ranked.toLowerCase();
     const players = req.query.array.split(",");
 
-    const isSeasonValid = await seasonAuthentication.isSeasonValid(season, shard);
-    if (!isSeasonValid) {
-        res.send({failedSeasonValidation: true});
-        return;
-    }
+    //TODO: factory for message
+    try {
+        if (!validation.isShardValid(shard)) {
+            res.send({statusCode: 400, message: "Invalid shard"})
+            return;
+        }
+        if (!await validation.isSeasonValid(season, shard)) {
+            res.send({statusCode: 400, message: "Invalid season or season does not exist with provided shard"})
+            return;
+        }
+        if (!validation.isGameModeValid(gameMode)) {
+            res.send({statusCode: 400, message: "Invalid gameMode"})
+            return;
+        }
+        if (!validation.isRankedValid(ranked)) {
+            res.send({statusCode: 400, message: "Ranked parameter must contain true or false"})
+            return;
+        }
+        ranked = (ranked === 'true')
 
-    var accountVerification = new AccountVerificationHandler(players, shard);
-    const obj = await accountVerification.verifyAccounts();
+        if (!validation.isPlayerCountValid(ranked, players)) {
+            res.send({statusCode: 400, message: ranked ? "Ranked requires no more than 1 player" : "Unranked requires no more than 10 players"})
+            return;
+        }
+        //TODO: cache seasons.
 
-    const fetchedStats = await stats.fetchStats(obj, shard, season, gameMode, false);
+        var accountVerification = new AccountVerificationHandler(players, shard);
+        var obj = await accountVerification.verifyAccounts();
 
-    if (fetchedStats instanceof Error) {
-        res.send({statusCode: 502, message: "Failed to fetch stats from Pubg api"})
-    } else {
-        const response = {validAccounts: obj.validAccounts, invalidAccounts: obj.invalidAccounts}
+        const fetchedStats = await stats.fetchStats(obj, shard, season, gameMode, ranked);
+        const response = {
+            statusCode: 200,
+            validAccounts: fetchedStats.validAccounts,
+            invalidAccounts: fetchedStats.invalidAccounts
+        }
         res.send(response);
+
+    } catch (error) {
+        res.send({statusCode: 502, message: error.message})
     }
 });
 

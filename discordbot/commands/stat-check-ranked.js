@@ -59,16 +59,12 @@ module.exports = {
         const season = interaction.options.getString('season');
         const gameMode = interaction.options.getString('game-mode');
 
-        const url = `http://localhost:3000/api/shards/${shard}/players/${names[0]}/seasons/${season}/gameMode/${gameMode}/ranked`;
+        const url = `http://localhost:3000/api/seasonStats/shard/${shard}/seasons/${season}/gameMode/${gameMode}/ranked/${true}/players?array=${names[0]}`;
         const response = await api.fetchData(url, 7500, "GET");
 
-        if ('APIError' in response) {
-            const details = response.details;
-            await interaction.editReply(`There was an error involving ${details}`)
-            return;
-        }
-        if ('failedSeasonValidation' in response) {
-            await interaction.editReply(`Invalid Season name: ${season} for ${shard}`)
+        if (response.statusCode !== 200) {
+            const details = response.message;
+            await interaction.editReply(details)
             return;
         }
         var attachment;

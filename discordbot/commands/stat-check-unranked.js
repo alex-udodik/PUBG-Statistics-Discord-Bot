@@ -60,7 +60,7 @@ module.exports = {
         const gameMode = interaction.options.getString('game-mode');
         
 
-        const urlPreJoin = [`http://localhost:3000/api/shard/${shard}/seasons/${season}/gameMode/${gameMode}/players?array=`];
+        const urlPreJoin = [`http://localhost:3000/api/seasonStats/shard/${shard}/seasons/${season}/gameMode/${gameMode}/ranked/${false}/players?array=`];
         names.forEach(name => {
             urlPreJoin.push(`${name},`)
         })
@@ -68,14 +68,9 @@ module.exports = {
         const url = urlComma.slice(0, -1);
         const response = await api.fetchData(url, 9999999, "GET");
 
-        if ('APIError' in response) {
-            const details = response.details;
-            await interaction.editReply(`There was an error involving ${details}`)
-            return;
-        }
-
-        if ('failedSeasonValidation' in response) {
-            await interaction.editReply(`Invalid Season name: ${season} for ${shard}`)
+        if (response.statusCode !== 200) {
+            const details = response.message;
+            await interaction.editReply(details)
             return;
         }
 

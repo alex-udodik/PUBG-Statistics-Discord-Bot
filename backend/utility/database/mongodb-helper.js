@@ -1,4 +1,5 @@
 const MongoDBSingleton = require('./mongodb-singleton');
+const {MongoError} = require("mongodb");
 
 module.exports = {
     insertOne: async function (database, collection, document, options) {
@@ -9,7 +10,8 @@ module.exports = {
 
             return result.acknowledged;
         } catch (error) {
-            return error;
+            console.log(error.message)
+            throw new MongoError(`Failed to insert ${document} into ${database}.${collection}`);
         }
     },
 
@@ -18,7 +20,8 @@ module.exports = {
             const mongodbCollection = getCollection(database, collection);
             return await mongodbCollection.insertMany(document);
         } catch (error) {
-            return error;
+            console.log(error.message)
+            throw new MongoError(`Failed to insert ${document} into ${database}.${collection}`);
         }
     },
 
@@ -30,7 +33,8 @@ module.exports = {
             else { name = await mongodbCollection.findOne(query); }
             return name;
         } catch (error) {
-            return error;
+            console.log(error.message)
+            throw new MongoError(`Failed to find ${query} from ${database}.${collection}`);
         }
     },
 
@@ -39,13 +43,19 @@ module.exports = {
             const mongodbCollection = getCollection(database, collection);
             return await mongodbCollection.find(query, options);
         } catch (error) {
-            return error;
+            console.log(error.message)
+            throw new MongoError(`Failed to find ${query} from ${database}.${collection}`);
         }
     },
 }
 
 const getCollection = function(database, collection) {
-    const databaseInstance = MongoDBSingleton.getInstance()
-    const mongodbDatabase = databaseInstance.db(database);
-    return mongodbDatabase.collection(collection);
+    try {
+        const databaseInstance = MongoDBSingleton.getInstance()
+        const mongodbDatabase = databaseInstance.db(database);
+        return mongodbDatabase.collection(collection);
+    } catch (error) {
+        console.log(error)
+        throw new MongoError(`There was an error fetching the mongo instance.`);
+    }
 }
