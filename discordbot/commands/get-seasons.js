@@ -28,8 +28,8 @@ module.exports = {
         console.log("URL: ", url);
         const seasons = await api.fetchData(url, 5000, false, "GET");
         
-        const embed = factory.createEmbedFactory(shard, seasons);
+        const obj = factory.createEmbedFactory(shard, seasons);
         
-        await interaction.editReply({embeds: [embed]});    
+        await interaction.editReply(obj);
     }
 }
