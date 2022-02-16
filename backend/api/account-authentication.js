@@ -39,6 +39,7 @@ class AccountVerificationHandler {
         try {
             obj = await _checkNamesFromPubgApi(obj, this.shard, this.names);
         } catch (error) {
+            if (error.message === 429) {throw error}
             throw new APIError("Failed to verify pubg names with the PUBG API.");
         }
         await _insertNamesIntoCache(obj, 1800, this.shard);

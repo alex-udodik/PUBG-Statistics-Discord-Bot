@@ -3,6 +3,8 @@ const { Routes } = require('discord-api-types/v9');
 const { Client, Intents, Collection } = require('discord.js');
 const fs = require('fs');
 const dotenv = require('dotenv');
+const MongodbSingleton = require('../backend/utility/database/mongodb-singleton');
+const BotAnalytics = require("./commands-helper/analytics");
 
 dotenv.config();
 
@@ -54,7 +56,10 @@ client.on("interactionCreate", async interaction => {
     console.log(command);
 
     try {
-        await command.execute(interaction);
+        const isRateLimited = await command.execute(interaction);
+        const commandAnalytics = new BotAnalytics(interaction, isRateLimited)
+        await commandAnalytics.send("DiscordBot-PubgStats", "Analytics")
+
     } catch (err) {
         if (err) console.error(err);
 
@@ -66,3 +71,13 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.login(process.env.BOT_TOKEN);
+
+(async () => {
+    try {
+
+        var mongodb = MongodbSingleton.getInstance();
+        await mongodb.connect();
+    } catch (error) {
+        console.log("Error: ", error);
+    }
+})();

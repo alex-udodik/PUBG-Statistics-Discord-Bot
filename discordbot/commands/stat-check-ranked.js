@@ -47,7 +47,7 @@ module.exports = {
     async execute(interaction) {
 
         await interaction.deferReply({ephemeral: true});
-
+        var isRateLimited = false;
         const pubg_name = interaction.options.getString('name');
         const names = pubg_name.split(/[ ,]+/)
 
@@ -63,53 +63,59 @@ module.exports = {
         const response = await api.fetchData(url, 7500, "GET");
 
         if (response.statusCode !== 200) {
+            if (response.statusCode === 429) {
+                isRateLimited = true;
+            }
             const details = response.message;
             await interaction.editReply(details)
-            return;
         }
-        var attachment;
+        else {
+            var attachment;
 
-        var embed = new MessageEmbed();
-        if (response.validAccounts.length > 0) {
+            var embed = new MessageEmbed();
+            if (response.validAccounts.length > 0) {
 
-            await Promise.all(response.validAccounts.map(async account => {
-                account.calcedStats = (account.rawStats !== null ?
-                    statsParser.getCalculatedStatsRanked(account.rawStats) :
-                    statsParser.getDummyDataRanked());
-                var item = [];
-                for (const [key, value] of Object.entries(account.calcedStats)) {
-                    item.push(`${key}: ${value}\n`);
-                }
-                const value = item.join("");
-                const field = {name: gameMode, value: value, inline: true}
+                await Promise.all(response.validAccounts.map(async account => {
+                    account.calcedStats = (account.rawStats !== null ?
+                        statsParser.getCalculatedStatsRanked(account.rawStats) :
+                        statsParser.getDummyDataRanked());
+                    var item = [];
+                    for (const [key, value] of Object.entries(account.calcedStats)) {
+                        item.push(`${key}: ${value}\n`);
+                    }
+                    const value = item.join("");
+                    const field = {name: gameMode, value: value, inline: true}
 
-                const filePath = await rankedIconGetter.get(account.calcedStats.currentRankPoint)
-                attachment = new MessageAttachment(filePath);
-                const pathSplit = String(filePath).split("/")
-                const img = pathSplit[pathSplit.length - 1]
+                    const filePath = await rankedIconGetter.get(account.calcedStats.currentRankPoint)
+                    attachment = new MessageAttachment(filePath);
+                    const pathSplit = String(filePath).split("/")
+                    const img = pathSplit[pathSplit.length - 1]
 
-                embed.setTitle(`Ranked stats for ${account.displayName}`)
-                embed.setDescription(`Platform: ${shard}\nSeason: ${season}`);
-                embed.setThumbnail(`attachment://${img}`);
-                embed.addFields(field);
-            }))
-        } else {
-            const fail_message = "Account failed fetch from API (DNE or missing upper/lower case):";
-            namesThatFailedLookUp = [];
-            response.invalidAccounts.forEach(name_ => {
-                namesThatFailedLookUp.push(`\n\u2022${name_.name}`);
-            })
-            embed.setTitle(fail_message);
-            embed.setDescription(namesThatFailedLookUp.join(""));
+                    embed.setTitle(`Ranked stats for ${account.displayName}`)
+                    embed.setDescription(`Platform: ${shard}\nSeason: ${season}`);
+                    embed.setThumbnail(`attachment://${img}`);
+                    embed.addFields(field);
+                }))
+            } else {
+                const fail_message = "Account failed fetch from API (DNE or missing upper/lower case):";
+                namesThatFailedLookUp = [];
+                response.invalidAccounts.forEach(name_ => {
+                    namesThatFailedLookUp.push(`\n\u2022${name_.name}`);
+                })
+                embed.setTitle(fail_message);
+                embed.setDescription(namesThatFailedLookUp.join(""));
+
+                await interaction.editReply(
+                    {embeds: [embed]}
+                )
+                return;
+            }
 
             await interaction.editReply(
-                {embeds: [embed]}
+                {embeds: [embed], files: [attachment]}
             )
-            return;
         }
 
-        await interaction.editReply(
-            {embeds: [embed], files: [attachment]}
-        )
+        return isRateLimited;
     }
 }

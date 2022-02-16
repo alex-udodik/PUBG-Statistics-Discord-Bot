@@ -27,7 +27,6 @@ app.get('/api/seasonStats/shard/:shard/seasons/:season/gameMode/:gameMode/ranked
     var ranked = req.params.ranked.toLowerCase();
     const players = req.query.array.split(",");
 
-    //TODO: factory for message
     try {
         if (!validation.isShardValid(shard)) {
             res.send({statusCode: 400, message: "Invalid shard"})
@@ -65,7 +64,8 @@ app.get('/api/seasonStats/shard/:shard/seasons/:season/gameMode/:gameMode/ranked
         res.send(response);
 
     } catch (error) {
-        res.send({statusCode: 502, message: error.message})
+        if (error.message === 429) {res.send({statusCode: 429, message: "Too many requests to the PUBG API. Please wait."})}
+        else {res.send({statusCode: 502, message: error.message})}
     }
 });
 

@@ -29,7 +29,7 @@ module.exports = {
             .then(res => {
                 if (res.status === 429) {
                     console.log("API Response Status: ", res.status);
-                    throw new APIError("Too many requests to PUBG API");
+                    throw new APIError(429);
                 }
 
                 return res.json();
@@ -38,6 +38,10 @@ module.exports = {
             }).catch(err => {
                 console.log(`Error fetching from PUBG API: ${err.type}`);
                 clearTimeout(timeout_);
+
+                if (err.message === 429) {
+                    throw err;
+                }
                 throw new APIError(`Error fetching from PUBG API: ${err.type}`);
             });
     }

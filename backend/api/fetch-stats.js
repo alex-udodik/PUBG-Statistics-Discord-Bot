@@ -29,6 +29,9 @@ module.exports = {
             try {
                 obj = await getStatsFromApi(obj);
             } catch (error) {
+                if (error.message === 429) {
+                    throw error
+                }
                 throw new APIError("Failed to fetch stats from PUBG API");
             }
         }
@@ -167,8 +170,7 @@ getStatsFromApi = async (obj) => {
     if ('errors' in results) {
         //TODO: return object and error details
         return {APIError: true, details: "Fetching stats"}
-    }
-    else {
+    } else {
         var documents = [];
 
         await Promise.all(obj.validAccounts.map(async account => {

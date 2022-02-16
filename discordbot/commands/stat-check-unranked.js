@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const api = require('../utility/pubg/api');
 const statsParser = require('../commands-helper/stats-parser');
+const BotAnalytics = require('../commands-helper/analytics')
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -47,6 +48,7 @@ module.exports = {
     async execute(interaction) {
 
         await interaction.deferReply({ ephemeral: true });
+        var isRateLimited = false;
 
         const pubg_name = interaction.options.getString('names');
         const names = pubg_name.split(/[ ,]+/)
@@ -69,53 +71,58 @@ module.exports = {
         const response = await api.fetchData(url, 9999999, "GET");
 
         if (response.statusCode !== 200) {
+            if (response.statusCode === 429) {
+                isRateLimited = true;
+            }
             const details = response.message;
             await interaction.editReply(details)
-            return;
-        }
-
-        var embed = new MessageEmbed();
-        if (response.validAccounts.length > 0) {
-            response.validAccounts.forEach(account => {
-                account.calcedStats = statsParser.getCalculatedStats(account.rawStats);
-                var item = [];
-                for (const [key, value] of Object.entries(account.calcedStats)) {
-                    item.push(`${key}: ${value}\n`);
-                }
-                const value = item.join("");
-                const field = { name: account.name, value: value, inline: true }
-                embed.addFields(field);
-            })
-        }
-
-        
-        const fail_message = "Accounts failed fetch from API (DNE or missing upper/lower case):";
-        var namesThatFailedLookUp = [];
-
-        if (response.validAccounts.length > 0 && response.invalidAccounts.length === 0) {
-            embed.setTitle("Stats");
-        }
-        else if (response.validAccounts.length > 0 && response.invalidAccounts.length > 0) {
-            var footer = [fail_message];
-
-            response.invalidAccounts.forEach(name_ => {
-                namesThatFailedLookUp.push(`\n\u2022${name_.name}`);
-            })
-
-            footer.push.apply(footer, namesThatFailedLookUp);
-            embed.setFooter({ text: footer.join("") });
-            embed.setTitle("Stats");
         }
         else {
-            response.invalidAccounts.forEach(name_ => {
-                namesThatFailedLookUp.push(`\n\u2022${name_.name}`);
-            })
-            embed.setTitle(fail_message);
-            embed.setDescription(namesThatFailedLookUp.join(""));
+            var embed = new MessageEmbed();
+            if (response.validAccounts.length > 0) {
+                response.validAccounts.forEach(account => {
+                    account.calcedStats = statsParser.getCalculatedStats(account.rawStats);
+                    var item = [];
+                    for (const [key, value] of Object.entries(account.calcedStats)) {
+                        item.push(`${key}: ${value}\n`);
+                    }
+                    const value = item.join("");
+                    const field = { name: account.name, value: value, inline: true }
+                    embed.addFields(field);
+                })
+            }
+
+
+            const fail_message = "Accounts failed fetch from API (DNE or missing upper/lower case):";
+            var namesThatFailedLookUp = [];
+
+            if (response.validAccounts.length > 0 && response.invalidAccounts.length === 0) {
+                embed.setTitle("Stats");
+            }
+            else if (response.validAccounts.length > 0 && response.invalidAccounts.length > 0) {
+                var footer = [fail_message];
+
+                response.invalidAccounts.forEach(name_ => {
+                    namesThatFailedLookUp.push(`\n\u2022${name_.name}`);
+                })
+
+                footer.push.apply(footer, namesThatFailedLookUp);
+                embed.setFooter({ text: footer.join("") });
+                embed.setTitle("Stats");
+            }
+            else {
+                response.invalidAccounts.forEach(name_ => {
+                    namesThatFailedLookUp.push(`\n\u2022${name_.name}`);
+                })
+                embed.setTitle(fail_message);
+                embed.setDescription(namesThatFailedLookUp.join(""));
+            }
+
+            await interaction.editReply(
+                { embeds: [embed] }
+            )
         }
 
-        await interaction.editReply(
-            { embeds: [embed] }
-        )
+        return isRateLimited;
     }
 }
