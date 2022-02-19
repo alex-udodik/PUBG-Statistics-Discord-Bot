@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const api = require('../utility/pubg/api');
+const api = require('../utility/api');
 const factory = require('../commands-helper/seasons-embed-factory');
 
 module.exports = {
@@ -26,7 +26,7 @@ module.exports = {
         const url = `http://localhost:3000/api/shard/${shard}/seasons`;
 
         console.log("URL: ", url);
-        const seasons = await api.fetchData(url, 5000, false, "GET");
+        const seasons = await api.fetchData(url, 9999999, null, "GET");
         
         const obj = factory.createEmbedFactory(shard, seasons);
         

@@ -20,7 +20,7 @@ const fetchData = async (url, timeout) => {
             signal: signal,
             headers: {
                 'Authorization': `Bearer ${process.env.PUBG_API_KEY}`,
-                'Accept': 'application/vnd.api+json',
+                'Accept': 'application/vnd.routes+json',
             },
         }
     }
@@ -32,7 +32,7 @@ const fetchData = async (url, timeout) => {
         }).then(body => {
             return body;
         }).catch(err => {
-            console.log("error from api: ", err.type);
+            console.log("error from routes: ", err.type);
             clearTimeout(timeout_);
             return err;
         });
@@ -64,9 +64,9 @@ exports.handler = async (event) => {
             var count = await seasonsCursor.count();
             console.log("Season count: ", count);
             if (count === 0) {
-                console.log("Fetching seasons from pubg api.");
+                console.log("Fetching seasons from pubg routes.");
                 const results = await fetchData(`https://api.pubg.com/shards/${value}/seasons`, 5000);
-                if (results instanceof Error) { console.log("error fetching seasons from pubg api"); return; }
+                if (results instanceof Error) { console.log("error fetching seasons from pubg routes"); return; }
                 if ('data' in results) {
                     var documents = [];
                     results.data.forEach(seasonObj => {
@@ -84,9 +84,9 @@ exports.handler = async (event) => {
                 }
             }
             else {
-                console.log("Fetching seasons from pubg api for comparison");
+                console.log("Fetching seasons from pubg routes for comparison");
                 const results = await fetchData(`https://api.pubg.com/shards/${value}/seasons`, 5000);
-                if (results instanceof Error) { console.log("error fetching seasons from pubg api"); return; }
+                if (results instanceof Error) { console.log("error fetching seasons from pubg routes"); return; }
                 if ('data' in results) {
                     var seasonDocument = {
                         type: "", id: "", isCurrentSeason: false, isOffseason: false

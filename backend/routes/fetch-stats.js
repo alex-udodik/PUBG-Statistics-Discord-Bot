@@ -160,7 +160,7 @@ getStatsFromApi = async (obj) => {
     var results;
 
     try {
-        results = await api.fetchData(url, 5000);
+        results = await api.fetchData(url, 5000, null, "GET");
     } catch (error) {
         throw error;
     }

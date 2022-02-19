@@ -47,6 +47,35 @@ module.exports = {
             throw new MongoError(`Failed to find ${query} from ${database}.${collection}`);
         }
     },
+
+    deleteOne: async function (database, collection, query ,options) {
+        try {
+            const mongodbCollection = getCollection(database, collection);
+            return await mongodbCollection.deleteOne(query);
+        } catch (error) {
+            console.log(error.message);
+            throw new MongoError(`Failed to delete ${query} from ${database}.${collection}`);
+        }
+    },
+
+    updateOne: async function (database, collection, query ,filter, options) {
+        try {
+            const mongodbCollection = getCollection(database, collection);
+            return await mongodbCollection.updateOne(filter, query, options);
+        } catch (error) {
+            console.log(error.message);
+            throw new MongoError(`Failed to update ${query} from ${database}.${collection}`);
+        }
+    },
+
+    findAll: async function(database, collection) {
+        try {
+            return await getCollection(database, collection).find()
+        } catch (error) {
+            console.log(error.message)
+            throw new MongoError(`Failed to find all from ${database}.${collection}`);
+        }
+    }
 }
 
 const getCollection = function(database, collection) {

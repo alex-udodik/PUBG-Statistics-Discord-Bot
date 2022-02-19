@@ -1,8 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const api = require('../utility/pubg/api');
+const api = require('../utility/api');
 const statsParser = require('../commands-helper/stats-parser');
-const BotAnalytics = require('../commands-helper/analytics')
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -60,7 +59,7 @@ module.exports = {
         const shard = interaction.options.getString('platform');
         const season = interaction.options.getString('season');
         const gameMode = interaction.options.getString('game-mode');
-        
+
 
         const urlPreJoin = [`http://localhost:3000/api/seasonStats/shard/${shard}/seasons/${season}/gameMode/${gameMode}/ranked/${false}/players?array=`];
         names.forEach(name => {
@@ -68,7 +67,7 @@ module.exports = {
         })
         var urlComma = urlPreJoin.join("");
         const url = urlComma.slice(0, -1);
-        const response = await api.fetchData(url, 9999999, "GET");
+        const response = await api.fetchData(url, 9999999, null,"GET");
 
         if (response.statusCode !== 200) {
             if (response.statusCode === 429) {
