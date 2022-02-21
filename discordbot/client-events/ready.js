@@ -30,6 +30,7 @@ module.exports = {
             await Promise.all(guilds.map(async guild => {
                 await rest.put(Routes.applicationGuildCommands(clientId, guild.id),
                     {body: guild.commands})
+
             }))
 
             console.log('Successfully reloaded application (/) commands.');
@@ -48,7 +49,7 @@ const readGlobalCommands = async (client) => {
     for (const file of commandFiles) {
         const command = require(`../commands/global-commands/${file}`);
         globalCommands.push(command.data.toJSON());
-        client.commands.set(command.data.name, command);
+        await client.commands.set(command.data.name, command);
     }
     return globalCommands;
 }
@@ -57,7 +58,7 @@ const readGuildCommands = async (client) => {
     const guilds = [];
     const commandFiles = fs.readdirSync('./commands/guild-commands/').filter(file => file.endsWith('.js'));
 
-    const documents = await api.fetchData("http://localhost:3000/discord/guildCommands/all", 60000, null, "GET");
+    const documents = await api.fetchData("http://localhost:3000/discord/guildCommands/all", 5000, null, "GET");
     await Promise.all(documents.message.map(async document => {
         var guildCommands = []
         for (const [shard, value] of Object.entries(document)) {
@@ -73,8 +74,10 @@ const readGuildCommands = async (client) => {
     }))
 
     for (const file of commandFiles) {
-        const command = require(`../commands/guild-commands/${file}`);
-        client.commands.set(command.data.name, command);
+        const module = require(`../commands/guild-commands/${file}`)
+        module.data = await slashCommand.getParticularSlashCommand(file.slice(0, -3))
+        var command = module.data.toJSON()
+        await client.commands.set(command.name, command);
     }
 
     return guilds;

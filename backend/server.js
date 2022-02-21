@@ -117,6 +117,13 @@ app.patch('/discord/guildCommands', async function (req, res) {
 
 })
 
+app.get('/discord/guildCommands/guild/:guildId', async function (req, res) {
+    const guildId = req.params.guildId.toLowerCase();
+
+    const item = await mongo.findOne("DiscordBot-PubgStats", "GuildCommands", {_id: guildId})
+    res.send(item)
+})
+
 app.get('/discord/guildCommands/all', async function(req, res) {
     const cursor = await mongo.findAll("DiscordBot-PubgStats", "GuildCommands")
     var documents = []
@@ -139,10 +146,18 @@ app.ws('/notifications', (ws, req) => {
 function notify(data) {
     expressWs.getWss('/notifications').clients.forEach(function each(client) {
         if (client.readyState === WebSocket.OPEN) {
-
-            client.send(data);
+            client.send(JSON.stringify(data));
         }
     });
+}
+
+async function generateLatestSeason(shard) {
+    const cursor = await mongo.findAll("DiscordBot-PubgStats", "GuildCommands")
+    var documents = []
+    await cursor.forEach(document => { documents.push(document) })
+    var response = { shard: shard, guildCommands: documents}
+
+    notify(response)
 }
 
 app.listen(port, function () {
@@ -157,6 +172,9 @@ app.listen(port, function () {
         await cache.connect();
         var mongodb = MongodbSingleton.getInstance();
         await mongodb.connect();
+
+        //listen to mongodb seasons for changes
+        mongo.watch("PUBG", generateLatestSeason)
 
     } catch (error) {
         console.log("Error: ", error);

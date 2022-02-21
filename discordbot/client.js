@@ -1,8 +1,8 @@
 const { Client, Intents, Collection } = require('discord.js');
 const fs = require('fs');
 const dotenv = require('dotenv');
-const MongodbSingleton = require('../backend/utility/database/mongodb-singleton');
 const backendListener = require("./utility/backend-notifications/backend-listener-singleton");
+const MongodbSingleton = require('../backend/utility/database/mongodb-singleton');
 
 dotenv.config();
 
@@ -29,16 +29,24 @@ client.on("interactionCreate", async interaction => {
     await require('./client-events/interactionCreate').execute(interaction, client);
 });
 
-backendListener.getInstance().onmessage = event => {
-    console.log("Message from server: ", event.data)
+backendListener.getInstance().onmessage = async event => {
+    const response = JSON.parse(event.data)
+    console.log("Message from server: ", response)
 
+    const shard = response.shard;
+    const updater = require('./commands-helper/guild-commands-updater')
+    await Promise.all(response.guildCommands.map(async guildCommand => {
+            if (guildCommand[shard] === true) {
+                await updater.put(guildCommand._id, shard)
+            }
+        }
+    ))
 }
 
 client.login(process.env.BOT_TOKEN);
 
 (async () => {
     try {
-
         var mongodb = MongodbSingleton.getInstance();
         await mongodb.connect();
     } catch (error) {

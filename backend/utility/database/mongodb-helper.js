@@ -1,5 +1,6 @@
 const MongoDBSingleton = require('./mongodb-singleton');
 const {MongoError} = require("mongodb");
+const fs = require("fs");
 
 module.exports = {
     insertOne: async function (database, collection, document, options) {
@@ -74,6 +75,22 @@ module.exports = {
         } catch (error) {
             console.log(error.message)
             throw new MongoError(`Failed to find all from ${database}.${collection}`);
+        }
+    },
+
+    watch: function(database, callback) {
+        try {
+            const databaseInstance = MongoDBSingleton.getInstance()
+            const mongodbDatabase = databaseInstance.db(database);
+            const files = fs.readdirSync('./utility/database/events/change/watch/').filter(file => file.endsWith('.js'));
+            for (const file of files) {
+                const season = require(`./events/change/watch/${file}`)
+                season.watch(mongodbDatabase, callback)
+            }
+
+        } catch (error) {
+            console.log(error.message)
+            throw new MongoError(`There was an error trying to watch ${database} collections`)
         }
     }
 }

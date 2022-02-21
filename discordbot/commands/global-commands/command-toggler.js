@@ -1,8 +1,6 @@
 const {SlashCommandBuilder} = require('@discordjs/builders');
-const {MessageEmbed} = require('discord.js');
 const api = require('../../utility/api');
-const statsParser = require('../../commands-helper/stats-parser');
-const BotAnalytics = require('../../analytics/analytics')
+const commandsUpdater = require("../../commands-helper/guild-commands-updater");
 
 module.exports = {
 
@@ -60,13 +58,24 @@ module.exports = {
 
         const result = await api.fetchData("http://localhost:3000/discord/guildCommands", 7500, guildCommand, "PATCH")
 
-        if (result.message === "Exists")
-            reply = `${shard} commands are already enabled.`
-        else if (result.message === "Success")
-            reply = `${shard} commands have been successfully enabled.`
-            //TODO: here we need a way to build the command and then either make a PUT or DELETE call
-        else
+        if (result.message === "Exists"){
+            reply = `${shard} commands are already ${interaction.options._subcommand}d.`
+        }
+        else if (result.message === "Success"){
+            reply = `${shard} commands have been successfully ${interaction.options._subcommand}d.`
+            const commandsUpdater = require('../../commands-helper/guild-commands-updater');
+
+            if (interaction.options._subcommand === "enable") {
+                await commandsUpdater.put(interaction.guildId, shard)
+            }
+            else {
+                await commandsUpdater.delete(interaction.guildId, shard)
+            }
+        }
+        else{
             reply = `There was an internal error enabling commands for ${shard}`
+        }
+
 
 
         await interaction.editReply(reply)
