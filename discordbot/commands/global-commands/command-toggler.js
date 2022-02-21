@@ -57,39 +57,42 @@ module.exports = {
         guildCommand.value = value
         guildCommand.query[shard] = value
 
+        const commandsUpdater = require('../../commands-helper/guild-commands-updater');
+
+        //TODO: needs to verify if it exists from discord first and then proceed with action.
 
 
-        const document = await api.fetchData(`http://localhost:3000/discord/guildCommands/guild/${guildId}`, 7500, null,"GET")
-        if (document[shard] === value){
-            reply = `${shard} commands are already ${interaction.options._subcommand}d.`
+        const document = await api.fetchData(`http://localhost:3000/discord/guildCommands/guild/${guildId}`, 10000, null,"GET")
+        const registeredInDiscord = await commandsUpdater.get(guildId, shard)
+
+        if (!registeredInDiscord && interaction.options._subcommand === "enable") {
+            //proceeed to enable
+            if (await commandsUpdater.put(interaction.guildId, shard)){
+                const result = await api.fetchData("http://localhost:3000/discord/guildCommands", 10000, guildCommand, "PATCH")
+                if (result.message === "Success") {
+                    reply = `${shard} commands have been successfully ${interaction.options._subcommand}d.`
+                }
+                else {
+                    reply = `There was an internal error enabling commands for ${shard}`
+                }
+            }
+        }
+        else if (registeredInDiscord && interaction.options._subcommand === "disable") {
+            if (await commandsUpdater.delete(interaction.guildId, shard)) {
+                const result = await api.fetchData("http://localhost:3000/discord/guildCommands", 7500, guildCommand, "PATCH")
+                if (result.message === "Success") {
+                    reply = `${shard} commands have been successfully ${interaction.options._subcommand}d.`
+                }
+                else {
+                    reply = `There was an internal error enabling commands for ${shard}`
+                }
+            }
         }
         else {
-            const commandsUpdater = require('../../commands-helper/guild-commands-updater');
-
-            if (interaction.options._subcommand === "enable") {
-                if (await commandsUpdater.put(interaction.guildId, shard)){
-                    const result = await api.fetchData("http://localhost:3000/discord/guildCommands", 7500, guildCommand, "PATCH")
-                    if (result.message === "Success") {
-                        reply = `${shard} commands have been successfully ${interaction.options._subcommand}d.`
-                    }
-                    else {
-                        reply = `There was an internal error enabling commands for ${shard}`
-                    }
-                }
-            }
-            else {
-                if (await commandsUpdater.delete(interaction.guildId, shard)) {
-                    const result = await api.fetchData("http://localhost:3000/discord/guildCommands", 7500, guildCommand, "PATCH")
-                    if (result.message === "Success") {
-                        reply = `${shard} commands have been successfully ${interaction.options._subcommand}d.`
-                    }
-                    else {
-                        reply = `There was an internal error enabling commands for ${shard}`
-                    }
-                }
-            }
-
+            //no change needed.
+            reply = `${shard} commands are already ${interaction.options._subcommand}d.`
         }
+
 
         await interaction.editReply(reply)
     }

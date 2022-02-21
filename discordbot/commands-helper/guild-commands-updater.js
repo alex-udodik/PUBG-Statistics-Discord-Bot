@@ -48,4 +48,17 @@ module.exports = {
             return false;
         }
     },
+
+    async get(guildId, shard) {
+        const rest = new REST({version: '9'}).setToken(process.env.BOT_TOKEN);
+
+        const commands = await rest.get(Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId));
+        for (command of commands) {
+            if (command.name === `stats-${shard}`) {
+                return true;
+            }
+        }
+
+        return false
+    },
 }
