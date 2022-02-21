@@ -50,33 +50,46 @@ module.exports = {
         const shard = interaction.options.getString("platform")
         const guildId = interaction.guildId;
 
+        const value = interaction.options._subcommand === "enable";
         const guildCommand = {query: {}}
         guildCommand["_id"] = guildId;
         guildCommand.shard = shard;
-        guildCommand.value = interaction.options._subcommand === "enable";
-        guildCommand.query[shard] = interaction.options._subcommand === "enable";
+        guildCommand.value = value
+        guildCommand.query[shard] = value
 
-        const result = await api.fetchData("http://localhost:3000/discord/guildCommands", 7500, guildCommand, "PATCH")
 
-        if (result.message === "Exists"){
+
+        const document = await api.fetchData(`http://localhost:3000/discord/guildCommands/guild/${guildId}`, 7500, null,"GET")
+        if (document[shard] === value){
             reply = `${shard} commands are already ${interaction.options._subcommand}d.`
         }
-        else if (result.message === "Success"){
-            reply = `${shard} commands have been successfully ${interaction.options._subcommand}d.`
+        else {
             const commandsUpdater = require('../../commands-helper/guild-commands-updater');
 
             if (interaction.options._subcommand === "enable") {
-                await commandsUpdater.put(interaction.guildId, shard)
+                if (await commandsUpdater.put(interaction.guildId, shard)){
+                    const result = await api.fetchData("http://localhost:3000/discord/guildCommands", 7500, guildCommand, "PATCH")
+                    if (result.message === "Success") {
+                        reply = `${shard} commands have been successfully ${interaction.options._subcommand}d.`
+                    }
+                    else {
+                        reply = `There was an internal error enabling commands for ${shard}`
+                    }
+                }
             }
             else {
-                await commandsUpdater.delete(interaction.guildId, shard)
+                if (await commandsUpdater.delete(interaction.guildId, shard)) {
+                    const result = await api.fetchData("http://localhost:3000/discord/guildCommands", 7500, guildCommand, "PATCH")
+                    if (result.message === "Success") {
+                        reply = `${shard} commands have been successfully ${interaction.options._subcommand}d.`
+                    }
+                    else {
+                        reply = `There was an internal error enabling commands for ${shard}`
+                    }
+                }
             }
-        }
-        else{
-            reply = `There was an internal error enabling commands for ${shard}`
-        }
 
-
+        }
 
         await interaction.editReply(reply)
     }

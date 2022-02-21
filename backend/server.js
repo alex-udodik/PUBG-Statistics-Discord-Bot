@@ -119,7 +119,6 @@ app.patch('/discord/guildCommands', async function (req, res) {
 
 app.get('/discord/guildCommands/guild/:guildId', async function (req, res) {
     const guildId = req.params.guildId.toLowerCase();
-
     const item = await mongo.findOne("DiscordBot-PubgStats", "GuildCommands", {_id: guildId})
     res.send(item)
 })

@@ -58,7 +58,7 @@ const readGuildCommands = async (client) => {
     const guilds = [];
     const commandFiles = fs.readdirSync('./commands/guild-commands/').filter(file => file.endsWith('.js'));
 
-    const documents = await api.fetchData("http://localhost:3000/discord/guildCommands/all", 5000, null, "GET");
+    const documents = await api.fetchData("http://localhost:3000/discord/guildCommands/all", 20000, null, "GET");
     await Promise.all(documents.message.map(async document => {
         var guildCommands = []
         for (const [shard, value] of Object.entries(document)) {
