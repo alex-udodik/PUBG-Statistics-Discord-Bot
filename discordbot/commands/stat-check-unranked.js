@@ -60,7 +60,6 @@ module.exports = {
         const season = interaction.options.getString('season');
         const gameMode = interaction.options.getString('game-mode');
 
-
         const urlPreJoin = [`http://localhost:3000/api/seasonStats/shard/${shard}/seasons/${season}/gameMode/${gameMode}/ranked/${false}/players?array=`];
         names.forEach(name => {
             urlPreJoin.push(`${name},`)

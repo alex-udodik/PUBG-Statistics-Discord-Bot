@@ -234,7 +234,7 @@ getStatsFromApi = async (obj) => {
 }
 
 insertStatsIntoMongo = async (documents, season) => {
-    if (season !== "lifetime") {
+    if (season !== "lifetime" && documents.length > 0) {
         try {
             await mongodb.insertMany("PUBG", "PlayerStats", documents);
         } catch (error) {

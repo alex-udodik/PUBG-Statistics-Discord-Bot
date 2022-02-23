@@ -77,7 +77,7 @@ const readGuildCommands = async (client) => {
         const module = require(`../commands/guild-commands/${file}`)
         module.data = await slashCommand.getParticularSlashCommand(file.slice(0, -3))
         var command = module.data.toJSON()
-        await client.commands.set(command.name, command);
+        await client.commands.set(command.name, module);
     }
 
     return guilds;

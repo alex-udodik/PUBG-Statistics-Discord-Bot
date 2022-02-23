@@ -49,7 +49,7 @@ module.exports = {
         }
     },
 
-    async get(guildId, shard) {
+    async exists(guildId, shard) {
         const rest = new REST({version: '9'}).setToken(process.env.BOT_TOKEN);
 
         const commands = await rest.get(Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId));

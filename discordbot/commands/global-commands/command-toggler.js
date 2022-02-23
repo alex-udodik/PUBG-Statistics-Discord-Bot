@@ -59,11 +59,7 @@ module.exports = {
 
         const commandsUpdater = require('../../commands-helper/guild-commands-updater');
 
-        //TODO: needs to verify if it exists from discord first and then proceed with action.
-
-
-        const document = await api.fetchData(`http://localhost:3000/discord/guildCommands/guild/${guildId}`, 10000, null,"GET")
-        const registeredInDiscord = await commandsUpdater.get(guildId, shard)
+        const registeredInDiscord = await commandsUpdater.exists(guildId, shard)
 
         if (!registeredInDiscord && interaction.options._subcommand === "enable") {
             //proceeed to enable
@@ -92,7 +88,6 @@ module.exports = {
             //no change needed.
             reply = `${shard} commands are already ${interaction.options._subcommand}d.`
         }
-
 
         await interaction.editReply(reply)
     }
