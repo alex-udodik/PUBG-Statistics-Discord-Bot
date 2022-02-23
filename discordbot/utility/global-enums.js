@@ -1,33 +1,33 @@
 module.exports = {
-    Shard: Object.freeze({
-            STEAM: "steam",
-            XBOX: "xbox",
-            PSN: "psn",
-            STADIA: "stadia",
-            KAKAO: "kakao"
-        }
-    ),
 
-    GameMode: Object.freeze({
-        RANKED: "GameModeRanked",
-        UNRANKED: "GameModeUnranked"
-    }),
-
-    PlayerCount: Object.freeze({
-        RANKED: "PlayerCountRanked",
-        UNRANKED: "PlayerCountUnranked"
-    }),
-
-    Seasons: Object.freeze({
-        STEAM: this.Shard.STEAM,
-        XBOX: this.Shard.XBOX,
-        PSN: this.Shard.PSN,
-        STADIA: this.Shard.STADIA,
-        KAKAO: this.Shard.KAKAO,
-    }),
-
-    GameType: Object.freeze({
-        RANKED: "GameTypeRanked",
-        UNRANKED: "GameTypeUnranked"
-    })
+    rounds: "Rounds",
+    wins: "Wins",
+    kd: "KD",
+    kda: "KDA",
+    winPercent: "Win %",
+    avgRank: "Avg Rank",
+    top10Ratio: "Top 10 %",
+    adr: "ADR",
+    currentRankPoint: "Rank Points",
+    currentTier_Tier: "Tier",
+    currentTier_subTier: "SubTier",
+    winRate: "Win %",
+    timeSurvived: "Time Survived",
+    hsRatio: "Headshot %",
+    suicides: "Suicides",
+    teamkills: "Team Kills",
+    longestKill: "Longest Kill",
+    NewRating: "Rat Rating",
+    OldRating: "Fragger Rating",
+    squadfpp: "FPP Squad",
+    squad: "TPP Squad",
+    solofpp: "FPP Solo",
+    solo: "TPP Solo",
+    duofpp: "FPP Duo",
+    duo: "TPP Duo",
+    steam: "Steam",
+    psn: "Playstation",
+    xbox: "Xbox",
+    stadia: "Stadia",
+    kakao: "Kakao",
 }
