@@ -27,6 +27,9 @@ const steam = (seasonId, ranked) => {
             }
         }
     }
+    if (seasonId === "lifetime") {
+        return {seasonId: "lifetime", name: "Lifetime"}
+    }
     return undefined;
 }
 const xbox = (seasonId, ranked) => {
@@ -40,7 +43,9 @@ const xbox = (seasonId, ranked) => {
             }
         }
     }
-
+    if (seasonId === "lifetime") {
+        return {seasonId: "lifetime", name: "Lifetime"}
+    }
     return undefined;
 }
 const psn = (seasonId, ranked) => {
@@ -55,7 +60,9 @@ const psn = (seasonId, ranked) => {
             }
         }
     }
-
+    if (seasonId === "lifetime") {
+        return {seasonId: "lifetime", name: "Lifetime"}
+    }
     return undefined;
 }
 const stadia = (seasonId, ranked) => {
@@ -64,7 +71,9 @@ const stadia = (seasonId, ranked) => {
         const num = parseInt(seasonId.slice(-2));
         return {seasonId: seasonId, name: `Season ${num}`}
     }
-
+    if (seasonId === "lifetime") {
+        return {seasonId: "lifetime", name: "Lifetime"}
+    }
     return undefined;
 }
 const kakao = (seasonId, ranked) => {

@@ -4,6 +4,8 @@ const {MessageEmbed, MessageAttachment} = require("discord.js");
 const rankedIconGetter = require("../commands-helper/ranked-icon-getter");
 const enums = require("../utility/global-enums");
 const seasonConverter = require("../utility/pubg/season-names-simplified");
+const constants = require("../utility/global-enums");
+const numberToWord = require("../utility/number-to-word");
 
 module.exports = {
     async runCommand(interaction) {
@@ -78,6 +80,19 @@ const generateEmbed = async (response, ranked, bundle) => {
 
     var embed = new MessageEmbed();
 
+    const seasonConverter = require('../utility/pubg/season-names-simplified')
+    const constants = require('../utility/global-enums')
+    const shardPretty = constants[bundle.shard]
+    const seasonName = seasonConverter.getSimplifiedSeasonName(bundle.shard, bundle.season, bundle.ranked)
+    const gameModePretty = constants[(bundle.gameMode).replace("-", "")]
+
+    const description = response.validAccounts.length === 1 && response.invalidAccounts.length === 0 ?
+        `${shardPretty}\n${gameModePretty}`:
+        `${shardPretty}\n${gameModePretty}\n${seasonName.name}`
+    embed.setDescription(description)
+
+    const numberToWord = require('../utility/number-to-word')
+
     if (!ranked) {
         if (response.validAccounts.length > 0) {
             response.validAccounts.forEach(account => {
@@ -88,7 +103,8 @@ const generateEmbed = async (response, ranked, bundle) => {
                     item.push(`${label}: ${value}\n`);
                 }
                 const value = item.join("");
-                const field = { name: account.displayName, value: value, inline: true }
+                const fieldHeader = response.validAccounts.length === 1 && response.invalidAccounts.length === 0 ? seasonName.name : account.displayName
+                const field = { name: fieldHeader, value: value, inline: true }
                 embed.addFields(field);
             })
         }
@@ -99,11 +115,12 @@ const generateEmbed = async (response, ranked, bundle) => {
         if (response.validAccounts.length > 0 && response.invalidAccounts.length === 0) {
             if (response.validAccounts.length === 1) {
                 embed.setTitle(`Unranked Stats for ${response.validAccounts[0].displayName}`);
+                embed.setColor(stringToColour(response.validAccounts[0].displayName))
             }
             else {
-                embed.setTitle("Unranked Stats");
+                embed.setTitle("Unranked Stats")
+                embed.setColor(stringToColour(numberToWord.toWordsconvert((seasonName.name).slice(-2))))
             }
-
         }
         else if (response.validAccounts.length > 0 && response.invalidAccounts.length > 0) {
             var footer = [fail_message];
@@ -114,7 +131,8 @@ const generateEmbed = async (response, ranked, bundle) => {
 
             footer.push.apply(footer, namesThatFailedLookUp);
             embed.setFooter({ text: footer.join("") });
-            embed.setTitle("Stats");
+            embed.setTitle("Unranked Stats");
+            embed.setColor(stringToColour(numberToWord.toWordsconvert((seasonName.name).slice(-2))))
         }
         else {
             response.invalidAccounts.forEach(name_ => {
@@ -122,6 +140,7 @@ const generateEmbed = async (response, ranked, bundle) => {
             })
             embed.setTitle(fail_message);
             embed.setDescription(namesThatFailedLookUp.join(""));
+            embed.setColor('#960018')
         }
 
         return {embeds: [embed]}
@@ -137,20 +156,15 @@ const generateEmbed = async (response, ranked, bundle) => {
                     const label = enums[key]
                     item.push(`${label}: ${value}\n`);
                 }
-                const seasonConverter = require('../utility/pubg/season-names-simplified')
-                const season = seasonConverter.getSimplifiedSeasonName(bundle.shard, bundle.season, bundle.ranked)
 
                 const value = item.join("");
-                const field = {name: season.name, value: value, inline: true}
+                const field = {name: seasonName.name, value: value, inline: true}
 
                 const filePath = await rankedIconGetter.get(account.calcedStats.currentRankPoint)
                 attachment = new MessageAttachment(filePath);
                 const pathSplit = String(filePath).split("/")
                 const img = pathSplit[pathSplit.length - 1]
 
-                const constants = require('../utility/global-enums');
-                const gameModePretty = constants[(bundle.gameMode).replace("-", "")]
-                const shardPretty = constants[bundle.shard]
                 embed.setTitle(`Ranked stats for ${account.displayName}`)
                 embed.setDescription(`${shardPretty}\n${gameModePretty}`);
                 embed.setThumbnail(`attachment://${img}`);

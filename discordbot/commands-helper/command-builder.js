@@ -31,6 +31,7 @@ module.exports = {
                                 i--;
                             }
                         }
+                        option.addChoice("Lifetime", "lifetime")
                         return option
                     })
                     subCommand.addStringOption(option => option
