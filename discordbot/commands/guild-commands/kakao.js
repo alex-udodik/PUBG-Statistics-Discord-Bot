@@ -1,3 +1,4 @@
+const commandExecuteController = require("../runCommandController");
 
 module.exports = {
 
@@ -7,8 +8,7 @@ module.exports = {
 
         await interaction.deferReply({ephemeral: true});
         const commandExecuteController = require('../runCommandController')
-        await commandExecuteController.runCommand(interaction)
-        await interaction.editReply("test")
-
+        const reply = await commandExecuteController.runCommand(interaction)
+        await interaction.editReply(reply)
     }
 }

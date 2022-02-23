@@ -1,5 +1,6 @@
 const backend = require('../utility/api')
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const nameSimplifier = require("../utility/pubg/season-names-simplified");
 
 module.exports = {
 
@@ -24,7 +25,7 @@ module.exports = {
 
                         const nameSimplifier = require('../utility/pubg/season-names-simplified')
                         for (var i = size - 1, j = seasons.length - 1; i >= 0 && j >= 0; j--){
-                            var pair = nameSimplifier.getSimplifiedSeasonName(shard, seasons[j].id)
+                            var pair = nameSimplifier.getSimplifiedSeasonName(shard, seasons[j].id, false)
                             if (pair !== undefined) {
                                 option.addChoice(pair.name, pair.seasonId)
                                 i--;
@@ -64,8 +65,14 @@ module.exports = {
                         option.setDescription("The stats for this season will be queried")
                         option.setRequired(true)
                         //TODO: proper season names.
-                        for (var i = 0; i < size; i++) {
-                            option.addChoice(`Season ${i}`, seasons[i].id)
+
+                        const nameSimplifier = require('../utility/pubg/season-names-simplified')
+                        for (var i = size - 1, j = seasons.length - 1; i >= 0 && j >= 0; j--){
+                            var pair = nameSimplifier.getSimplifiedSeasonName(shard, seasons[j].id, true)
+                            if (pair !== undefined) {
+                                option.addChoice(pair.name, pair.seasonId)
+                                i--;
+                            }
                         }
                         return option
                     })

@@ -1,6 +1,7 @@
 const api = require("../utility/api");
 const statsParser = require("../commands-helper/stats-parser");
-const {MessageEmbed} = require("discord.js");
+const {MessageEmbed, MessageAttachment} = require("discord.js");
+const rankedIconGetter = require("../commands-helper/ranked-icon-getter");
 
 module.exports = {
     async runCommand(interaction) {
@@ -53,7 +54,9 @@ const calculatedStats = (response, ranked) => {
         }
         else {
             response.validAccounts.forEach(account => {
-                account.calcedStats = statsParser.getCalculatedStatsRanked(account.rawStats);
+                account.calcedStats = (account.rawStats !== null ?
+                    statsParser.getCalculatedStatsRanked(account.rawStats) :
+                    statsParser.getDummyDataRanked());
             })
         }
     }
@@ -102,10 +105,42 @@ const generateEmbed = (response, ranked) => {
             embed.setTitle(fail_message);
             embed.setDescription(namesThatFailedLookUp.join(""));
         }
+
+        return {embeds: [embed]}
     }
     else {
+        var attachment;
+        if (response.validAccounts.length > 0) {
+            response.validAccounts.forEach(account => {
 
+                var item = [];
+                for (const [key, value] of Object.entries(account.calcedStats)) {
+                    item.push(`${key}: ${value}\n`);
+                }
+                const value = item.join("");
+                const field = {name: gameMode, value: value, inline: true}
+
+                const filePath = rankedIconGetter.get(account.calcedStats.currentRankPoint)
+                attachment = new MessageAttachment(filePath);
+                const pathSplit = String(filePath).split("/")
+                const img = pathSplit[pathSplit.length - 1]
+
+                embed.setTitle(`Ranked stats for ${account.displayName}`)
+                embed.setDescription(`Platform: ${shard}\nSeason: ${season}`);
+                embed.setThumbnail(`attachment://${img}`);
+                embed.addFields(field);
+            })
+        } else {
+            const fail_message = "Account failed fetch from API (DNE or missing upper/lower case):";
+            namesThatFailedLookUp = [];
+            response.invalidAccounts.forEach(name_ => {
+                namesThatFailedLookUp.push(`\n\u2022${name_.name}`);
+            })
+            embed.setTitle(fail_message);
+            embed.setDescription(namesThatFailedLookUp.join(""));
+
+            return {embeds: [embed]}
+        }
+        return {embeds: [embed], files: [attachment]}
     }
-
-    return embed;
 }

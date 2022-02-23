@@ -1,99 +1,72 @@
 module.exports = {
 
-    getSimplifiedSeasonName(shard, seasonId) {
+    getSimplifiedSeasonName(shard, seasonId, ranked) {
 
-        if (shard === "steam") { return steam(seasonId)}
-        else if (shard === "xbox") {return xbox(seasonId)}
-        else if (shard === "psn") {return psn(seasonId)}
-        else if (shard === "stadia") {return stadia(seasonId)}
-        else if (shard === "kakao") {return kakao(seasonId)}
+        if (shard === "steam") {
+            return steam(seasonId, ranked)
+        } else if (shard === "xbox") {
+            return xbox(seasonId, ranked)
+        } else if (shard === "psn") {
+            return psn(seasonId, ranked)
+        } else if (shard === "stadia") {
+            return stadia(seasonId, ranked)
+        } else if (shard === "kakao") {
+            return kakao(seasonId, ranked)
+        }
     }
 }
 
-const steam = (seasonId) => {
-
-    const data = {};
-
-    data["division.bro.official.pc-2018-01"] = "Season 1"
-
-    if (!(seasonId in data)) {
-        if (seasonId.includes("division.bro.official.pc-2018-")) {
-            const num = seasonId.slice(-2);
+const steam = (seasonId, ranked) => {
+    if (seasonId.includes("division.bro.official.pc-2018-")) {
+        const num = parseInt(seasonId.slice(-2));
+        if (!ranked) {
             return {seasonId: seasonId, name: `Season ${num}`}
+        } else {
+            if (num >= 7) {
+                return {seasonId: seasonId, name: `Season ${num}`}
+            }
         }
-    }
-    else {
-        return {seasonId: seasonId, name: data[seasonId]}
-    }
-    return undefined;
-
-}
-const xbox = (seasonId) => {
-    const data = {};
-
-    data["division.bro.official.xbox-01"] = "Season 1"
-    data["division.bro.official.xbox-02"] = "Season 2"
-    data["division.bro.official.console-03"] = "Season 3"
-    data["division.bro.official.console-04"] = "Season 4"
-    data["division.bro.official.console-05"] = "Season 5"
-    data["division.bro.official.console-06"] = "Season 6"
-    data["division.bro.official.console-07"] = "Season 7"
-    data["division.bro.official.console-08"] = "Season 8"
-    data["division.bro.official.console-09"] = "Season 9"
-
-    if (!(seasonId in data)) {
-        if (seasonId.includes("division.bro.official.console-")) {
-            const num = seasonId.slice(-2);
-            return {seasonId: seasonId, name: `Season ${num}`}
-        }
-    }
-    else {
-        return {seasonId: seasonId, name: data[seasonId]}
     }
     return undefined;
 }
-const psn = (seasonId) => {
-    const data = {};
-
-    data["division.bro.official.playstation-01"] = "Season 1"
-    data["division.bro.official.playstation-02"] = "Season 2"
-    data["division.bro.official.console-03"] = "Season 3"
-    data["division.bro.official.console-04"] = "Season 4"
-    data["division.bro.official.console-05"] = "Season 5"
-    data["division.bro.official.console-06"] = "Season 6"
-    data["division.bro.official.console-07"] = "Season 7"
-    data["division.bro.official.console-08"] = "Season 8"
-    data["division.bro.official.console-09"] = "Season 9"
-
-    if (!(seasonId in data)) {
-        if (seasonId.includes("division.bro.official.console-")) {
-            const num = seasonId.slice(-2);
+const xbox = (seasonId, ranked) => {
+    if (seasonId.includes("division.bro.official.console-") || seasonId.includes("division.bro.official.xbox-")) {
+        const num = parseInt(seasonId.slice(-2));
+        if (!ranked) {
             return {seasonId: seasonId, name: `Season ${num}`}
+        } else {
+            if (num >= 7) {
+                return {seasonId: seasonId, name: `Season ${num}`}
+            }
         }
     }
-    else {
-        return {seasonId: seasonId, name: data[seasonId]}
-    }
+
     return undefined;
 }
-const stadia = (seasonId) => {
-    const data = {};
+const psn = (seasonId, ranked) => {
 
-    data["division.bro.official.console-07"] = "Season 7"
-    data["division.bro.official.console-08"] = "Season 8"
-    data["division.bro.official.console-09"] = "Season 9"
-
-    if (!(seasonId in data)) {
-        if (seasonId.includes("division.bro.official.console-")) {
-            const num = seasonId.slice(-2);
+    if (seasonId.includes("division.bro.official.console-") || seasonId.includes("division.bro.official.playstation-")) {
+        const num = parseInt(seasonId.slice(-2));
+        if (!ranked) {
             return {seasonId: seasonId, name: `Season ${num}`}
+        } else {
+            if (num >= 7) {
+                return {seasonId: seasonId, name: `Season ${num}`}
+            }
         }
     }
-    else {
-        return {seasonId: seasonId, name: data[seasonId]}
-    }
+
     return undefined;
 }
-const kakao = (seasonId) => {
-    return steam(seasonId)
+const stadia = (seasonId, ranked) => {
+
+    if (seasonId.includes("division.bro.official.console-")) {
+        const num = parseInt(seasonId.slice(-2));
+        return {seasonId: seasonId, name: `Season ${num}`}
+    }
+
+    return undefined;
+}
+const kakao = (seasonId, ranked) => {
+    return steam(seasonId, ranked)
 }
