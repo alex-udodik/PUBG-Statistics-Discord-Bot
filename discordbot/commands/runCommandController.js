@@ -13,6 +13,14 @@ module.exports = {
         const names = interaction.options.getString("names").split(/[ ,]+/)
         let ranked = false
 
+        const bundle = {
+            group: group,
+            shard: shard,
+            season: season,
+            gameMode: gameMode,
+            ranked: ranked
+        }
+
         if (group === "unranked") {
             if (names.length > 10) { return "Exceeded number of names for unranked (Max 10)" }
         }
@@ -22,7 +30,7 @@ module.exports = {
         }
 
         //build url
-        const urlPreJoin = [`http://localhost:3000/api/seasonStats/shard/${shard}/seasons/${season}/gameMode/${gameMode}/ranked/${false}/players?array=`];
+        const urlPreJoin = [`http://localhost:3000/api/seasonStats/shard/${shard}/seasons/${season}/gameMode/${gameMode}/ranked/${ranked}/players?array=`];
         names.forEach(name => {urlPreJoin.push(`${name},`)})
         var urlComma = urlPreJoin.join("");
         const url = urlComma.slice(0, -1);
@@ -40,7 +48,7 @@ module.exports = {
         }
 
         response = calculatedStats(response, ranked)
-        return generateEmbed(response, ranked)
+        return generateEmbed(response, ranked, bundle)
     }
 
 }
@@ -64,7 +72,7 @@ const calculatedStats = (response, ranked) => {
     return response
 }
 
-const generateEmbed = (response, ranked) => {
+const generateEmbed = async (response, ranked, bundle) => {
 
     var embed = new MessageEmbed();
 
@@ -111,25 +119,25 @@ const generateEmbed = (response, ranked) => {
     else {
         var attachment;
         if (response.validAccounts.length > 0) {
-            response.validAccounts.forEach(account => {
+            await Promise.all(response.validAccounts.map(async account => {
 
                 var item = [];
                 for (const [key, value] of Object.entries(account.calcedStats)) {
                     item.push(`${key}: ${value}\n`);
                 }
                 const value = item.join("");
-                const field = {name: gameMode, value: value, inline: true}
+                const field = {name: bundle.gameMode, value: value, inline: true}
 
-                const filePath = rankedIconGetter.get(account.calcedStats.currentRankPoint)
+                const filePath = await rankedIconGetter.get(account.calcedStats.currentRankPoint)
                 attachment = new MessageAttachment(filePath);
                 const pathSplit = String(filePath).split("/")
                 const img = pathSplit[pathSplit.length - 1]
 
                 embed.setTitle(`Ranked stats for ${account.displayName}`)
-                embed.setDescription(`Platform: ${shard}\nSeason: ${season}`);
+                embed.setDescription(`Platform: ${bundle.shard}\nSeason: ${bundle.season}`);
                 embed.setThumbnail(`attachment://${img}`);
                 embed.addFields(field);
-            })
+            }))
         } else {
             const fail_message = "Account failed fetch from API (DNE or missing upper/lower case):";
             namesThatFailedLookUp = [];
