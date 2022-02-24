@@ -12,6 +12,7 @@ const mongo = require('./utility/database/mongodb-helper')
 
 const WebSocket = require('ws');
 var expressWs = require('express-ws');
+const BotAnalytics = require("./analytics/analytics");
 expressWs = expressWs(express());
 
 const app = expressWs.app;
@@ -26,13 +27,15 @@ app.get('/', function (req, res) {
     res.send({message: "Hello World!"})
 });
 
-app.get('/api/seasonStats/shard/:shard/seasons/:season/gameMode/:gameMode/ranked/:ranked/players', async function (req, res) {
+app.post('/api/seasonStats/shard/:shard/seasons/:season/gameMode/:gameMode/ranked/:ranked/players', async function (req, res) {
     const shard = req.params.shard.toLowerCase();
     const season = req.params.season.toLowerCase();
     const gameMode = req.params.gameMode.toLowerCase();
     var ranked = req.params.ranked.toLowerCase();
     const players = req.query.array.split(",");
 
+    const interaction = req.body;
+    const BotAnalytics = require('./analytics/analytics')
     try {
         if (!validation.isShardValid(shard)) {
             res.send({statusCode: 400, message: "Invalid shard"})
@@ -67,10 +70,16 @@ app.get('/api/seasonStats/shard/:shard/seasons/:season/gameMode/:gameMode/ranked
             validAccounts: fetchedStats.validAccounts,
             invalidAccounts: fetchedStats.invalidAccounts
         }
+        const analytics = new BotAnalytics(interaction, false)
+        await analytics.send("DiscordBot-PubgStats", "Analytics")
         res.send(response);
 
     } catch (error) {
-        if (error.message === 429) {res.send({statusCode: 429, message: "Too many requests to the PUBG API. Please wait."})}
+        if (error.message === 429) {
+            const analytics = new BotAnalytics(interaction, true)
+            analytics.send("DiscordBot-PubgStats", "Analytics")
+            res.send({statusCode: 429, message: "Too many requests to the PUBG API. Please wait."})
+        }
         else {res.send({statusCode: 502, message: error.message})}
     }
 });
@@ -131,7 +140,6 @@ app.get('/discord/guildCommands/all', async function(req, res) {
     })
     res.send({message: documents})
 })
-
 
 
 // websocket route

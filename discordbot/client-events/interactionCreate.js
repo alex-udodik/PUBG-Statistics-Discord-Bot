@@ -1,4 +1,3 @@
-const BotAnalytics = require("../analytics/analytics");
 
 module.exports = {
     async execute(interaction, client) {
@@ -10,9 +9,7 @@ module.exports = {
         console.log(command);
 
         try {
-            const isRateLimited = await command.execute(interaction);
-            const commandAnalytics = new BotAnalytics(interaction, isRateLimited)
-            await commandAnalytics.send("DiscordBot-PubgStats", "Analytics")
+            await command.execute(interaction);
         } catch (err) {
             if (err) console.error(err);
 

@@ -39,8 +39,20 @@ module.exports = {
         var urlComma = urlPreJoin.join("");
         const url = urlComma.slice(0, -1);
 
-        //query backend with GET using the url that was previously constructed
-        let response = await api.fetchData(url, 7500, null,"GET");
+        //build simple interaction object;
+        const payload =  {
+            applicationId: String(interaction.applicationId),
+            guildId: String(interaction.guildId),
+            channelId: String(interaction.channelId),
+            userId: String(interaction.user.id),
+            commandId: String(interaction.commandId),
+            commandName: String(interaction.commandName),
+            options: interaction.options._hoistedOptions,
+            date: interaction.createdAt,
+        }
+
+        //query backend using the url that was previously constructed
+        let response = await api.fetchData(url, 20000, payload,"POST");
 
         //check if we got an error from the backend request
         if (response.statusCode !== 200) {

@@ -2,7 +2,6 @@ const { Client, Intents, Collection } = require('discord.js');
 const fs = require('fs');
 const dotenv = require('dotenv');
 const backendListener = require("./utility/backend-notifications/backend-listener-singleton");
-const MongodbSingleton = require('../backend/utility/database/mongodb-singleton');
 
 dotenv.config();
 
@@ -44,12 +43,3 @@ backendListener.getInstance().onmessage = async event => {
 }
 
 client.login(process.env.BOT_TOKEN);
-
-(async () => {
-    try {
-        var mongodb = MongodbSingleton.getInstance();
-        await mongodb.connect();
-    } catch (error) {
-        console.log("Error: ", error);
-    }
-})();
