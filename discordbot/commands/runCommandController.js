@@ -10,63 +10,71 @@ const numberToWord = require("../utility/number-to-word");
 module.exports = {
     async runCommand(interaction) {
 
-        const group = interaction.options._group;
-        const shard = interaction.commandName.replace("stats-", "")
-        const season = interaction.options.getString("season")
-        const gameMode = interaction.options.getString("game-mode")
-        const names = interaction.options.getString("names").split(/[ ,]+/)
-        let ranked = false
-
-        const bundle = {
-            group: group,
-            shard: shard,
-            season: season,
-            gameMode: gameMode,
-            ranked: ranked
+        if (interaction.options._subcommand === "all-seasons") {
+            const graphCommandController = require('../commands/graphCommandController')
+            return await graphCommandController.runCommand(interaction)
         }
+        else {
+            const group = interaction.options._group;
+            const shard = interaction.commandName.replace("stats-", "")
+            const season = interaction.options.getString("season")
+            const gameMode = interaction.options.getString("game-mode")
+            const names = interaction.options.getString("names").split(/[ ,]+/)
 
-        if (group === "unranked") {
-            if (names.length > 10) { return "Exceeded number of names for unranked (Max 10)" }
-        }
-        else if (group === "ranked") {
-            if (names.length > 1) { return "Exceeded number of names for ranked (Max 1)"}
-            ranked = true
-        }
 
-        //build url
-        const urlPreJoin = [`http://localhost:3000/api/seasonStats/shard/${shard}/seasons/${season}/gameMode/${gameMode}/ranked/${ranked}/players?array=`];
-        names.forEach(name => {urlPreJoin.push(`${name},`)})
-        var urlComma = urlPreJoin.join("");
-        const url = urlComma.slice(0, -1);
+            let ranked = false
 
-        //build simple interaction object;
-        const payload =  {
-            applicationId: String(interaction.applicationId),
-            guildId: String(interaction.guildId),
-            channelId: String(interaction.channelId),
-            userId: String(interaction.user.id),
-            commandId: String(interaction.commandId),
-            commandName: String(interaction.commandName),
-            options: interaction.options._hoistedOptions,
-            date: interaction.createdAt,
-        }
-
-        //query backend using the url that was previously constructed
-        let response = await api.fetchData(url, 20000, payload,"POST");
-
-        //check if we got an error from the backend request
-        if (response.statusCode !== 200) {
-            if (response.statusCode === 429) {
-                //isRateLimited = true;
+            const bundle = {
+                group: group,
+                shard: shard,
+                season: season,
+                gameMode: gameMode,
+                ranked: ranked
             }
 
-            return response.message;
+            if (group === "unranked") {
+                if (names.length > 10) {
+                    return "Exceeded number of names for unranked (Max 10)"
+                }
+            } else if (group === "ranked") {
+                if (names.length > 1) {
+                    return "Exceeded number of names for ranked (Max 1)"
+                }
+                ranked = true
+            }
+
+            //build url
+            const urlPreJoin = [`http://localhost:3000/api/seasonStats/shard/${shard}/seasons/${season}/gameMode/${gameMode}/ranked/${ranked}/players?array=`];
+            names.forEach(name => {
+                urlPreJoin.push(`${name},`)
+            })
+            var urlComma = urlPreJoin.join("");
+            const url = urlComma.slice(0, -1);
+
+            //build simple interaction object;
+            const payload = {
+                applicationId: String(interaction.applicationId),
+                guildId: String(interaction.guildId),
+                channelId: String(interaction.channelId),
+                userId: String(interaction.user.id),
+                commandId: String(interaction.commandId),
+                commandName: String(interaction.commandName),
+                options: interaction.options._hoistedOptions,
+                date: interaction.createdAt,
+            }
+
+            //query backend using the url that was previously constructed
+            let response = await api.fetchData(url, 20000, payload, "POST");
+
+            //check if we got an error from the backend request
+            if (response.statusCode !== 200) {
+                return response.message;
+            }
+
+            response = calculatedStats(response, ranked)
+            return generateEmbed(response, ranked, bundle)
         }
-
-        response = calculatedStats(response, ranked)
-        return generateEmbed(response, ranked, bundle)
     }
-
 }
 
 const calculatedStats = (response, ranked) => {
@@ -75,8 +83,7 @@ const calculatedStats = (response, ranked) => {
             response.validAccounts.forEach(account => {
                 account.calcedStats = statsParser.getCalculatedStats(account.rawStats);
             })
-        }
-        else {
+        } else {
             response.validAccounts.forEach(account => {
                 account.calcedStats = (account.rawStats !== null ?
                     statsParser.getCalculatedStatsRanked(account.rawStats) :
@@ -99,7 +106,7 @@ const generateEmbed = async (response, ranked, bundle) => {
     const gameModePretty = constants[(bundle.gameMode).replace("-", "")]
 
     const description = response.validAccounts.length === 1 && response.invalidAccounts.length === 0 ?
-        `${shardPretty}\n${gameModePretty}`:
+        `${shardPretty}\n${gameModePretty}` :
         `${shardPretty}\n${gameModePretty}\n${seasonName.name}`
     embed.setDescription(description)
 
@@ -116,7 +123,7 @@ const generateEmbed = async (response, ranked, bundle) => {
                 }
                 const value = item.join("");
                 const fieldHeader = response.validAccounts.length === 1 && response.invalidAccounts.length === 0 ? seasonName.name : account.displayName
-                const field = { name: fieldHeader, value: value, inline: true }
+                const field = {name: fieldHeader, value: value, inline: true}
                 embed.addFields(field);
             })
         }
@@ -128,13 +135,11 @@ const generateEmbed = async (response, ranked, bundle) => {
             if (response.validAccounts.length === 1) {
                 embed.setTitle(`Unranked Stats for ${response.validAccounts[0].displayName}`);
                 embed.setColor(stringToColour(response.validAccounts[0].displayName))
-            }
-            else {
+            } else {
                 embed.setTitle("Unranked Stats")
                 embed.setColor(stringToColour(numberToWord.toWordsconvert((seasonName.name).slice(-2))))
             }
-        }
-        else if (response.validAccounts.length > 0 && response.invalidAccounts.length > 0) {
+        } else if (response.validAccounts.length > 0 && response.invalidAccounts.length > 0) {
             var footer = [fail_message];
 
             response.invalidAccounts.forEach(name_ => {
@@ -142,11 +147,10 @@ const generateEmbed = async (response, ranked, bundle) => {
             })
 
             footer.push.apply(footer, namesThatFailedLookUp);
-            embed.setFooter({ text: footer.join("") });
+            embed.setFooter({text: footer.join("")});
             embed.setTitle("Unranked Stats");
             embed.setColor(stringToColour(numberToWord.toWordsconvert((seasonName.name).slice(-2))))
-        }
-        else {
+        } else {
             response.invalidAccounts.forEach(name_ => {
                 namesThatFailedLookUp.push(`\n\u2022${name_.name}`);
             })
@@ -156,8 +160,7 @@ const generateEmbed = async (response, ranked, bundle) => {
         }
 
         return {embeds: [embed]}
-    }
-    else {
+    } else {
         var attachment;
         if (response.validAccounts.length > 0) {
             await Promise.all(response.validAccounts.map(async account => {

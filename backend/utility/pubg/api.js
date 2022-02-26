@@ -31,14 +31,10 @@ module.exports = {
                     console.log("API Response Status: ", res.status);
                     throw new APIError(429);
                 }
-
-                return res.json();
-            }).then(body => {
-                return body;
+                return res;
             }).catch(err => {
                 console.log(`Error fetching from PUBG API: ${err.type}`);
                 clearTimeout(timeout_);
-
                 if (err.message === 429) {
                     throw err;
                 }

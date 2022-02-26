@@ -64,7 +64,7 @@ app.post('/api/seasonStats/shard/:shard/seasons/:season/gameMode/:gameMode/ranke
         var accountVerification = new AccountVerificationHandler(players, shard);
         var obj = await accountVerification.verifyAccounts();
 
-        const fetchedStats = await stats.fetchStats(obj, shard, season, gameMode, ranked);
+        const fetchedStats = await stats.fetchStats(obj, shard, season, gameMode, ranked, false);
         const response = {
             statusCode: 200,
             validAccounts: fetchedStats.validAccounts,
@@ -83,6 +83,72 @@ app.post('/api/seasonStats/shard/:shard/seasons/:season/gameMode/:gameMode/ranke
         else {res.send({statusCode: 502, message: error.message})}
     }
 });
+
+app.post('/api/allSeasonStats/shard/:shard/gameMode/:gameMode/ranked/:ranked/players', async function(req, res) {
+    const shard = req.params.shard.toLowerCase();
+    const gameMode = req.params.gameMode.toLowerCase();
+    var ranked = req.params.ranked.toLowerCase();
+    const players = req.query.array.split(",");
+
+    const interaction = req.body;
+    const BotAnalytics = require('./analytics/analytics')
+    try {
+        if (!validation.isShardValid(shard)) {
+            res.send({statusCode: 400, message: "Invalid shard"})
+            return;
+        }
+        if (!validation.isGameModeValid(gameMode)) {
+            res.send({statusCode: 400, message: "Invalid gameMode"})
+            return;
+        }
+        if (!validation.isRankedValid(ranked)) {
+            res.send({statusCode: 400, message: "Ranked parameter must contain true or false"})
+            return;
+        }
+        ranked = (ranked === 'true')
+
+        if (!validation.isPlayerCountValid(ranked, players)) {
+            res.send({statusCode: 400, message: ranked ? "Ranked requires no more than 1 player" : "Unranked requires no more than 10 players"})
+            return;
+        }
+        //TODO: cache seasons.
+
+        var accountVerification = new AccountVerificationHandler(players, shard);
+        var obj = await accountVerification.verifyAccounts();
+
+        //get seasons
+        const seasonList = await seasons.fetchSeasons(shard);
+
+        var buildObject = {
+            displayName: obj.validAccounts[0].displayName,
+            seasonsWithStats: []
+        }
+
+        //send in each season and create response
+        for (const season of seasonList){
+            const fetchedStats = await stats.fetchStats(obj, shard, season.id, gameMode, ranked, true);
+            const object = {
+                season: season,
+                stats: fetchedStats.validAccounts[0].rawStats
+            }
+
+            buildObject.seasonsWithStats.push(object)
+        }
+
+        const chart = require('./utility/quick-charts/chart-factory')
+        const url = await chart.getChart("fragger", buildObject)
+
+        res.send(JSON.stringify(url));
+
+    } catch (error) {
+        if (error.message === 429) {
+            const analytics = new BotAnalytics(interaction, true)
+            analytics.send("DiscordBot-PubgStats", "Analytics")
+            res.send({statusCode: 429, message: "Too many requests to the PUBG API. Please wait."})
+        }
+        else {res.send({statusCode: 502, message: error.message})}
+    }
+})
 
 app.get('/api/shard/:shard/seasons', async function (req, res) {
 

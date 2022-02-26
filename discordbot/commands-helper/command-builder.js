@@ -14,9 +14,9 @@ module.exports = {
             .setDescription(`Fetches stats on the ${shard} platform`)
             .addSubcommandGroup(group => {
                 group.setName("unranked")
-                group.setDescription(`Fetches unranked stats of ${shard} players for a particular season`)
+                group.setDescription(`Fetches unranked stats of ${shard} players`)
                 group.addSubcommand(subCommand => {
-                    subCommand.setName("ez-fill")
+                    subCommand.setName("one-season")
                     subCommand.setDescription(`Fetches unranked stats of ${shard} players for a particular season`)
                     subCommand.addStringOption(option => {
                         option.setName("season")
@@ -53,13 +53,35 @@ module.exports = {
                     )
                     return subCommand
                 })
+                group.addSubcommand(subCommand => {
+                    subCommand.setName("all-seasons")
+                    subCommand.setDescription(`Fetches unranked stats of ${shard} of a single player for all seasons`)
+                    subCommand.addStringOption(option => option
+                        .setName("game-mode")
+                        .setDescription("Choose a game-mode")
+                        .setRequired(true)
+                        .addChoice("FPP Squad", "squad-fpp")
+                        .addChoice("FPP Duo", "duo-fpp")
+                        .addChoice("FPP Solo", "solo-fpp")
+                        .addChoice("TPP Squad", "squad")
+                        .addChoice("TPP Duo", "duo")
+                        .addChoice("TPP Solo", "solo")
+                    )
+                    subCommand.addStringOption(option =>
+                        option
+                            .setName('names')
+                            .setDescription('Case-sensitive for 1st-time names! Max 1 name.')
+                            .setRequired(true)
+                    )
+                    return subCommand
+                })
                 return group;
             })
             .addSubcommandGroup(group => {
                 group.setName("ranked")
                 group.setDescription(`Fetches ranked stats of a single ${shard} player for a particular season`)
                 group.addSubcommand(subCommand => {
-                    subCommand.setName("ez-fill")
+                    subCommand.setName("one-season")
                     subCommand.setDescription(`Fetches ranked stats of a single ${shard} player for a particular season`)
                     subCommand.addStringOption(option => {
                         option.setName("season")
