@@ -84,10 +84,11 @@ app.post('/api/seasonStats/shard/:shard/seasons/:season/gameMode/:gameMode/ranke
     }
 });
 
-app.post('/api/allSeasonStats/shard/:shard/gameMode/:gameMode/ranked/:ranked/players', async function(req, res) {
+app.post('/api/graph/:statType/shard/:shard/gameMode/:gameMode/ranked/:ranked/players', async function(req, res) {
     const shard = req.params.shard.toLowerCase();
     const gameMode = req.params.gameMode.toLowerCase();
     var ranked = req.params.ranked.toLowerCase();
+    const statType = req.params.statType.toLowerCase();
     const players = req.query.array.split(",");
 
     const interaction = req.body;
@@ -116,6 +117,17 @@ app.post('/api/allSeasonStats/shard/:shard/gameMode/:gameMode/ranked/:ranked/pla
         var accountVerification = new AccountVerificationHandler(players, shard);
         var obj = await accountVerification.verifyAccounts();
 
+        var response = {
+            statusCode: 200,
+            validAccounts: obj.validAccounts,
+            invalidAccounts: obj.invalidAccounts,
+            url: ""
+        }
+        if (obj.validAccounts.length === 0) {
+            res.send(response)
+            return;
+        }
+
         //get seasons
         const seasonList = await seasons.fetchSeasons(shard);
 
@@ -136,9 +148,11 @@ app.post('/api/allSeasonStats/shard/:shard/gameMode/:gameMode/ranked/:ranked/pla
         }
 
         const chart = require('./utility/quick-charts/chart-factory')
-        const url = await chart.getChart("fragger", buildObject)
-
-        res.send(JSON.stringify(url));
+        const url = await chart.getChart(statType, buildObject)
+        response.url = url
+        response.displayName = obj.validAccounts[0].displayName
+        response.embedColor = statType === "fragger" ? "#DC9A01" : "#889E55"
+        res.send(response);
 
     } catch (error) {
         if (error.message === 429) {

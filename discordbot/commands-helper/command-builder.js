@@ -54,8 +54,30 @@ module.exports = {
                     return subCommand
                 })
                 group.addSubcommand(subCommand => {
-                    subCommand.setName("all-seasons")
-                    subCommand.setDescription(`Fetches unranked stats of ${shard} of a single player for all seasons`)
+                    subCommand.setName("graph-fragger")
+                    subCommand.setDescription(`Fetches fragger rating of a single player from all seasons`)
+                    subCommand.addStringOption(option => option
+                        .setName("game-mode")
+                        .setDescription("Choose a game-mode")
+                        .setRequired(true)
+                        .addChoice("FPP Squad", "squad-fpp")
+                        .addChoice("FPP Duo", "duo-fpp")
+                        .addChoice("FPP Solo", "solo-fpp")
+                        .addChoice("TPP Squad", "squad")
+                        .addChoice("TPP Duo", "duo")
+                        .addChoice("TPP Solo", "solo")
+                    )
+                    subCommand.addStringOption(option =>
+                        option
+                            .setName('names')
+                            .setDescription('Case-sensitive for 1st-time names! Max 1 name.')
+                            .setRequired(true)
+                    )
+                    return subCommand
+                })
+                group.addSubcommand(subCommand => {
+                    subCommand.setName("graph-revives")
+                    subCommand.setDescription(`Fetches revives-per-min of a single player from all seasons`)
                     subCommand.addStringOption(option => option
                         .setName("game-mode")
                         .setDescription("Choose a game-mode")

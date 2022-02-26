@@ -7,6 +7,8 @@ module.exports = {
         const group = interaction.options._group;
         const shard = interaction.commandName.replace("stats-", "")
         const gameMode = interaction.options.getString("game-mode")
+        const statType = interaction.options._subcommand.replace("graph-", "")
+
         const names = interaction.options.getString("names").split(/[ ,]+/)
         let ranked = false
 
@@ -29,15 +31,22 @@ module.exports = {
         }
 
         const url = await api.fetchData(
-            `http://localhost:3000/api/allSeasonStats/shard/${shard}/gameMode/${gameMode}/ranked/${ranked}/players?array=${names}`,
+            `http://localhost:3000/api/graph/${statType}/shard/${shard}/gameMode/${gameMode}/ranked/${ranked}/players?array=${names}`,
             180000,  payload, "POST"
         )
 
         var embed = new MessageEmbed();
-        embed.setImage(url)
-        embed.setTitle(`Unranked ${names}`)
-        embed.setDescription("This is a test description")
-
+        if (url.invalidAccounts.length > 0) {
+            embed.setTitle(`Accounts failed fetch from API (DNE or missing upper/lower case)`)
+            embed.setDescription(`\n\u2022${url.invalidAccounts[0].name}`)
+            embed.setColor('#960018')
+        }
+        else {
+            embed.setTitle(`Unranked ${url.displayName}`)
+            embed.setDescription("This is a test description")
+            embed.setImage(url.url)
+            embed.setColor(url.embedColor)
+        }
 
         return {embeds: [embed]}
 

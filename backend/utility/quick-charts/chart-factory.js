@@ -1,3 +1,4 @@
+const fraggerChart = require("./fragger-chart");
 
 
 module.exports = {
@@ -9,7 +10,8 @@ module.exports = {
             return await fraggerChart.generateChartUrl(object)
         }
         else if (type === "revives") {
-
+            const revivesChart = require('./revives-chart')
+            return await revivesChart.generateChartUrl(object)
         }
     }
 

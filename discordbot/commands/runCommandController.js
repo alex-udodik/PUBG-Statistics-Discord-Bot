@@ -10,7 +10,7 @@ const numberToWord = require("../utility/number-to-word");
 module.exports = {
     async runCommand(interaction) {
 
-        if (interaction.options._subcommand === "all-seasons") {
+        if (interaction.options._subcommand.includes("graph")) {
             const graphCommandController = require('../commands/graphCommandController')
             return await graphCommandController.runCommand(interaction)
         }
