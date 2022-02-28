@@ -44,7 +44,7 @@ module.exports = {
         }),
 
     async execute(interaction) {
-        await interaction.deferReply({ephemeral: true});
+        await interaction.deferReply({ephemeral: false});
         let reply = "";
 
         const shard = interaction.options.getString("platform")

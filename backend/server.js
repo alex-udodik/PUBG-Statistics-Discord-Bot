@@ -152,6 +152,7 @@ app.post('/api/graph/:statType/shard/:shard/gameMode/:gameMode/ranked/:ranked/pl
         response.url = url
         response.displayName = obj.validAccounts[0].displayName
         response.embedColor = statType === "fragger" ? "#DC9A01" : "#889E55"
+        response.description = statType === "fragger" ? "Unranked\nFragger Rating" : "Unranked\nRevives Per Min"
         res.send(response);
 
     } catch (error) {

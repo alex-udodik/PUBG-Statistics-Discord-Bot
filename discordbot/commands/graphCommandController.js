@@ -42,10 +42,10 @@ module.exports = {
             embed.setColor('#960018')
         }
         else {
-            embed.setTitle(`Unranked ${url.displayName}`)
-            embed.setDescription("This is a test description")
+            embed.setTitle(`${url.displayName}`)
             embed.setImage(url.url)
             embed.setColor(url.embedColor)
+            embed.setDescription(url.description)
         }
 
         return {embeds: [embed]}
