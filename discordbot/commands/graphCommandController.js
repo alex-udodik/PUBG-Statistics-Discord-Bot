@@ -19,6 +19,7 @@ module.exports = {
             userId: String(interaction.user.id),
             commandId: String(interaction.commandId),
             commandName: String(interaction.commandName),
+            subCommandName: String(interaction.options._subcommand),
             options: interaction.options._hoistedOptions,
             date: interaction.createdAt,
         }

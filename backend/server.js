@@ -153,6 +153,10 @@ app.post('/api/graph/:statType/shard/:shard/gameMode/:gameMode/ranked/:ranked/pl
         response.displayName = obj.validAccounts[0].displayName
         response.embedColor = statType === "fragger" ? "#DC9A01" : "#889E55"
         response.description = statType === "fragger" ? "Unranked\nFragger Rating" : "Unranked\nRevives Per Min"
+
+        const analytics = new BotAnalytics(interaction, false)
+        analytics.send("DiscordBot-PubgStats", "Analytics")
+
         res.send(response);
 
     } catch (error) {
@@ -197,6 +201,9 @@ app.patch('/discord/guildCommands', async function (req, res) {
     var query = {};
     query._id = document._id;
     query[document.shard] = document.value
+
+    const analytics = new BotAnalytics(document.interaction, false)
+    analytics.send("DiscordBot-PubgStats", "Analytics")
 
     const alreadyExists = await mongo.findOne("DiscordBot-PubgStats", "GuildCommands", query)
     if (alreadyExists !== null) {res.send({message: "Exists"})}

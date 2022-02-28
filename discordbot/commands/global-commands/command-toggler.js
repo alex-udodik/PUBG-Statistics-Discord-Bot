@@ -57,6 +57,20 @@ module.exports = {
         guildCommand.value = value
         guildCommand.query[shard] = value
 
+        const payload = {
+            applicationId: String(interaction.applicationId),
+            guildId: String(interaction.guildId),
+            channelId: String(interaction.channelId),
+            userId: String(interaction.user.id),
+            commandId: String(interaction.commandId),
+            commandName: String(interaction.commandName),
+            subCommandName: String(interaction.options._subcommand),
+            options: interaction.options._hoistedOptions,
+            date: interaction.createdAt,
+        }
+
+        guildCommand.interaction = payload
+
         const commandsUpdater = require('../../commands-helper/guild-commands-updater');
 
         const registeredInDiscord = await commandsUpdater.exists(guildId, shard)
