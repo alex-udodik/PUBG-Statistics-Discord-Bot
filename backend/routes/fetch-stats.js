@@ -160,7 +160,7 @@ getStatsFromApi = async (obj, ignoreRateLimit) => {
     var results;
 
     try {
-        var response = await api.fetchData(url, 5000, null, "GET");
+        var response = await api.fetchData(url, 10000, null, "GET");
         results = await response.json()
 
         const rateLimit = response.headers.get("x-ratelimit-limit");

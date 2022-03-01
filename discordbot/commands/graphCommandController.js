@@ -36,6 +36,10 @@ module.exports = {
             180000,  payload, "POST"
         )
 
+        if (url.statusCode !== 200) {
+            return url.message
+        }
+
         var embed = new MessageEmbed();
         if (url.invalidAccounts.length > 0) {
             embed.setTitle(`Accounts failed fetch from API (DNE or missing upper/lower case)`)

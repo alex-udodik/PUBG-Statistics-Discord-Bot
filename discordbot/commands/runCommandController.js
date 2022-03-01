@@ -65,7 +65,7 @@ module.exports = {
             }
 
             //query backend using the url that was previously constructed
-            let response = await api.fetchData(url, 20000, payload, "POST");
+            let response = await api.fetchData(url, 180000, payload, "POST");
 
             //check if we got an error from the backend request
             if (response.statusCode !== 200) {

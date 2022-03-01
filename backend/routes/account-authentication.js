@@ -140,7 +140,7 @@ _checkNamesFromPubgApi = async (obj, shard, names) => {
 
         var results;
         try {
-            var response = await api.fetchData(url, 5000);
+            var response = await api.fetchData(url, 10000);
             results = await response.json()
         } catch (error) {
             throw error;
