@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-const APIError = require('../../errors/APIError')
+const APIError = require('../errors/APIError')
 
 module.exports = {
 
@@ -20,22 +20,18 @@ module.exports = {
                 headers: {'Content-Type': 'application/json'},
             }
 
-            if (payload === true) {header.body = JSON.stringify(payload)}
-
-            console.log("Header: ", header);
+            if (payload !== null) {header.body = JSON.stringify(payload)}
             return header;
         }
 
         const headers = getHeaders();
         return await fetch(url, headers)
             .then(res => {
-                console.log("res: ", res);
                 return res.json();
             }).then(body => {
-                console.log("body: ", body);
                 return body;
             }).catch(err => {
-                console.log("error from api: ", err.type);
+                console.log("error from routes: ", err.type);
                 clearTimeout(timeout_);
                 return err;
             });

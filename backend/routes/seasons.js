@@ -17,7 +17,19 @@ module.exports = {
         var seasons = [];
        
         await cursor.forEach(season => {
-            seasons.push(season);
+            if (shard === "steam" || shard === "kakao") {
+                if (season.id.includes("division.bro.official.pc-")) {
+                    seasons.push(season);
+                }
+            }
+            else  {
+                if (season.id.includes("division.bro.official.playstation-") ||
+                    season.id.includes("division.bro.official.xbox-") ||
+                    season.id.includes("division.bro.official.console-")
+                    ) {
+                    seasons.push(season);
+                }
+            }
         })
 
         return seasons;

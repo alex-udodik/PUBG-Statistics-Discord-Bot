@@ -12,8 +12,11 @@
     "body-parser": "^1.19.1",
     "dotenv": "^14.3.2",
     "express": "^4.17.2",
+    "express-ws": "^5.0.2",
     "mongodb": "^4.3.1",
     "node-fetch": "^2.6.7",
-    "redis": "^4.0.2"
+    "quickchart-js": "^3.0.0",
+    "redis": "^4.0.2",
+    "ws": "^8.5.0"
   }
 }

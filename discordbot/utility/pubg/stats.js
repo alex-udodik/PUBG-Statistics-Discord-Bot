@@ -58,8 +58,11 @@ module.exports = {
         console.log("survivedTime: ", survivedTime);
         console.log("rating: ", rating);
         return rating;
-    }
+    },
 
+    getRevivesPerMin: function(revives, timeSurvivedMins) {
+        return revives / timeSurvivedMins
+    }
 
     /*      double numerator = (adr * (1 + headshotratio));
             double denominator = 1 - winratepercent;

@@ -1,18 +1,9 @@
-const { REST } = require('@discordjs/rest');
-const { Routes } = require('discord-api-types/v9');
 const { Client, Intents, Collection } = require('discord.js');
 const fs = require('fs');
 const dotenv = require('dotenv');
-const MongodbSingleton = require('../backend/utility/database/mongodb-singleton');
-const BotAnalytics = require("./commands-helper/analytics");
+const backendListener = require("./utility/backend-notifications/backend-listener-singleton");
 
 dotenv.config();
-
-const commands = [];
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
-
-const guildId = process.env.GUILD_ID;
-const clientId = process.env.CLIENT_ID;
 
 const client = new Client({
     intents: [Intents.FLAGS.GUILDS,
@@ -21,63 +12,34 @@ const client = new Client({
 
 client.commands = new Collection();
 
-for (const file of commandFiles) {
-    const command = require(`./commands/${file}`);
-    commands.push(command.data.toJSON());
-    client.commands.set(command.data.name, command);
-}
-
-client.on("ready", () => {
-    console.log("Bot is online.");
-
-    const rest = new REST({ version: '9' }).setToken(process.env.BOT_TOKEN);
-    (async () => {
-        try {
-            console.log('Started refreshing application (/) commands.');
-
-            await rest.put(
-                Routes.applicationGuildCommands(clientId, guildId),
-                { body: commands }
-            );
-
-            console.log('Successfully reloaded application (/) commands.');
-        } catch (error) {
-            console.error(error);
-        }
-    })();
+client.on("ready", async () => {
+    await require('./client-events/ready').execute(client);
 });
+
+client.on( "guildCreate", async guild => {
+    await require('./client-events/guildCreate').execute(guild)
+})
+
+client.on( "guildDelete", async guild => {
+    await require('./client-events/guildDelete').execute(guild)
+})
 
 client.on("interactionCreate", async interaction => {
-    if (!interaction.isCommand()) return;
-
-    const command = client.commands.get(interaction.commandName);
-
-    if (!command) return;
-    console.log(command);
-
-    try {
-        const isRateLimited = await command.execute(interaction);
-        const commandAnalytics = new BotAnalytics(interaction, isRateLimited)
-        await commandAnalytics.send("DiscordBot-PubgStats", "Analytics")
-
-    } catch (err) {
-        if (err) console.error(err);
-
-        await interaction.editReply({
-            content: "An error occured while executing the command.",
-            ephemeral: true
-        });
-    }
+    await require('./client-events/interactionCreate').execute(interaction, client);
 });
 
+backendListener.getInstance().onmessage = async event => {
+    const response = JSON.parse(event.data)
+    console.log("Message from server: ", response)
+
+    const shard = response.shard;
+    const updater = require('./commands-helper/guild-commands-updater')
+    await Promise.all(response.guildCommands.map(async guildCommand => {
+            if (guildCommand[shard] === true) {
+                await updater.put(guildCommand._id, shard)
+            }
+        }
+    ))
+}
+
 client.login(process.env.BOT_TOKEN);
-
-(async () => {
-    try {
-
-        var mongodb = MongodbSingleton.getInstance();
-        await mongodb.connect();
-    } catch (error) {
-        console.log("Error: ", error);
-    }
-})();

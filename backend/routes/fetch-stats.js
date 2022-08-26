@@ -7,7 +7,7 @@ const APIError = require('../errors/APIError');
 
 module.exports = {
 
-    fetchStats: async function (obj, shard, season, gameMode, ranked) {
+    fetchStats: async function (obj, shard, season, gameMode, ranked, ignoreRateLimit) {
 
         if (obj.validAccounts.length > 0) {
             obj = objInit(obj, shard, season, gameMode, ranked);
@@ -27,7 +27,7 @@ module.exports = {
             }
 
             try {
-                obj = await getStatsFromApi(obj);
+                obj = await getStatsFromApi(obj, ignoreRateLimit);
             } catch (error) {
                 if (error.message === 429) {
                     throw error
@@ -136,7 +136,7 @@ checkInMongo = async (obj) => {
     return obj;
 }
 
-getStatsFromApi = async (obj) => {
+getStatsFromApi = async (obj, ignoreRateLimit) => {
 
     const shard = obj.query.shard;
     const season = obj.query.season;
@@ -160,7 +160,24 @@ getStatsFromApi = async (obj) => {
     var results;
 
     try {
-        results = await api.fetchData(url, 5000);
+        var response = await api.fetchData(url, 10000, null, "GET");
+        results = await response.json()
+
+        const rateLimit = response.headers.get("x-ratelimit-limit");
+        const rateLimitRemaining = response.headers.get("x-ratelimit-remaining");
+        const rateLimitReset = response.headers.get("x-ratelimit-reset");
+
+        if (ignoreRateLimit) {
+            if (parseInt(rateLimitRemaining) === 0) {
+                const currentUnixTime = ((new Date().getTime()) / 1000);
+                const secondsToWait = (rateLimitReset - currentUnixTime) + 1
+                console.log("Seconds to wait: ", secondsToWait)
+
+                //hit api limits. Must wait.
+                await new Promise(resolve => setTimeout(resolve, secondsToWait * 1000));
+            }
+        }
+
     } catch (error) {
         throw error;
     }
@@ -234,7 +251,7 @@ getStatsFromApi = async (obj) => {
 }
 
 insertStatsIntoMongo = async (documents, season) => {
-    if (season !== "lifetime") {
+    if (season !== "lifetime" && documents.length > 0) {
         try {
             await mongodb.insertMany("PUBG", "PlayerStats", documents);
         } catch (error) {

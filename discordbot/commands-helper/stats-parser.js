@@ -22,16 +22,16 @@ module.exports = {
         const old_rating = parseFloat(statsCalc.getOldFraggerRating(adrRaw, hsRatioRaw, winRatio, timeSurivedRaw)).toFixed(2);
 
         return {
-            rounds: rounds,
-            adr: adr,
-            winRate: winRate,
-            timeSurvived: timeSurvived,
-            hsRatio: hsRatio,
-            suicides: suicides,
-            teamkills: teamkills,
-            longestKill: longestKill,
-            NewRating: new_rating,
-            OldRating: old_rating
+            rounds: isNaN(rounds) ? 0 : rounds,
+            adr: isNaN(adr) ? 0 : adr,
+            winRate: isNaN(winRate) ? 0 : winRate,
+            timeSurvived: isNaN(timeSurvived) ? 0 : timeSurvived,
+            hsRatio: isNaN(hsRatio) ? 0 : hsRatio,
+            suicides: isNaN(suicides) ? 0 : suicides,
+            teamkills: isNaN(teamkills) ? 0 : teamkills,
+            longestKill: longestKill === 0.00 ? 0 : longestKill,
+            NewRating: isNaN(new_rating) ? 0 : new_rating,
+            OldRating: isNaN(old_rating) ? 0 : old_rating
         }
     },
 
@@ -67,41 +67,17 @@ module.exports = {
 
     getDummyDataRanked: function()  {
         return {
-            currentTier:{
-                tier: "N/A",
-                subTier: "N/A"
-            },
-            currentRankPoint: -1,
-            bestTier:{
-                tier: "N/A",
-                subTier: "N/A"
-            },
-            bestRankPoint: 0,
-            roundsPlayed: 0,
-            avgRank: 0,
-            avgSurvivalTime: 0,
-            top10Ratio: 0,
-            winRatio: 0,
-            assists: 0,
+            rounds: 0,
             wins: 0,
+            kd: 0,
             kda: 0,
-            kdr: 0,
-            kills: 0,
-            deaths: 0,
-            roundMostKills: 0,
-            longestKill: 0,
-            headshotKills: 0,
-            headshotKillRatio: 0,
-            damageDealt: 0,
-            dBNOs: 0,
-            reviveRatio: 0,
-            revives: 0,
-            heals: 0,
-            boosts: 0,
-            weaponsAcquired: 0,
-            teamKills: 0,
-            playTime: 0,
-            killStreak: 0,
+            winPercent: 0,
+            avgRank: 0,
+            top10Ratio: 0,
+            adr: 0,
+            currentRankPoint: 0,
+            currentTier_Tier: "Unranked",
+            currentTier_subTier: 0
         }
     }
 }

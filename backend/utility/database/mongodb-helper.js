@@ -1,5 +1,6 @@
 const MongoDBSingleton = require('./mongodb-singleton');
 const {MongoError} = require("mongodb");
+const fs = require("fs");
 
 module.exports = {
     insertOne: async function (database, collection, document, options) {
@@ -47,6 +48,51 @@ module.exports = {
             throw new MongoError(`Failed to find ${query} from ${database}.${collection}`);
         }
     },
+
+    deleteOne: async function (database, collection, query ,options) {
+        try {
+            const mongodbCollection = getCollection(database, collection);
+            return await mongodbCollection.deleteOne(query);
+        } catch (error) {
+            console.log(error.message);
+            throw new MongoError(`Failed to delete ${query} from ${database}.${collection}`);
+        }
+    },
+
+    updateOne: async function (database, collection, query ,filter, options) {
+        try {
+            const mongodbCollection = getCollection(database, collection);
+            return await mongodbCollection.updateOne(filter, query, options);
+        } catch (error) {
+            console.log(error.message);
+            throw new MongoError(`Failed to update ${query} from ${database}.${collection}`);
+        }
+    },
+
+    findAll: async function(database, collection) {
+        try {
+            return await getCollection(database, collection).find()
+        } catch (error) {
+            console.log(error.message)
+            throw new MongoError(`Failed to find all from ${database}.${collection}`);
+        }
+    },
+
+    watch: function(database, callback) {
+        try {
+            const databaseInstance = MongoDBSingleton.getInstance()
+            const mongodbDatabase = databaseInstance.db(database);
+            const files = fs.readdirSync('./utility/database/events/change/watch/').filter(file => file.endsWith('.js'));
+            for (const file of files) {
+                const season = require(`./events/change/watch/${file}`)
+                season.watch(mongodbDatabase, callback)
+            }
+
+        } catch (error) {
+            console.log(error.message)
+            throw new MongoError(`There was an error trying to watch ${database} collections`)
+        }
+    }
 }
 
 const getCollection = function(database, collection) {
