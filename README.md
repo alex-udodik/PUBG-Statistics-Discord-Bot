@@ -1,5 +1,5 @@
 # PUBG-Statistics-Discord-Bot
+###### Check out the Discord Bot demo in a YouTube video down below.
 
-![Screenshot](example.gif)
-[![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/FhAOaBub9fg/0.jpg)](http://www.youtube.com/watch?v=FhAOaBub9fg)
+[![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/gKD8G7wlbs4/0.jpg)](http://www.youtube.com/watch?v=gKD8G7wlbs4)
 
