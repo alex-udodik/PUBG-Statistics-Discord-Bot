@@ -133,7 +133,7 @@ app.post('/api/graph/:statType/shard/:shard/gameMode/:gameMode/ranked/:ranked/pl
 
         var buildObject = {
             displayName: obj.validAccounts[0].displayName,
-            seasonsWithStats: []
+            seasonsWithStats: [],
         }
 
         //send in each season and create response
@@ -146,13 +146,16 @@ app.post('/api/graph/:statType/shard/:shard/gameMode/:gameMode/ranked/:ranked/pl
 
             buildObject.seasonsWithStats.push(object)
         }
+        const enums = require('../discordbot/utility/global-enums')
+        const mode = enums[gameMode.replace("-", "")]
+        buildObject.gameMode_ = mode
 
         const chart = require('./utility/quick-charts/chart-factory')
         const url = await chart.getChart(statType, buildObject)
         response.url = url
         response.displayName = obj.validAccounts[0].displayName
         response.embedColor = statType === "fragger" ? "#DC9A01" : "#889E55"
-        response.description = statType === "fragger" ? "Unranked\nFragger Rating" : "Unranked\nRevives Per Min"
+        response.description = statType === "fragger" ? `Unranked\n${mode}\nFragger Rating` : `Unranked\n${mode}\nRevives Per Min`
 
         const analytics = new BotAnalytics(interaction, false)
         analytics.send("DiscordBot-PubgStats", "Analytics")

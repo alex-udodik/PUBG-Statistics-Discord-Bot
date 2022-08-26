@@ -51,7 +51,7 @@ module.exports = {
             options: {
                 title: {
                     display: true,
-                    text: `${object.displayName} Revives Per Min Over Seasons`,
+                    text: `${object.displayName} Revives Per Min Over Seasons (${object.gameMode_})`,
                     fontColor: "#DCDCDC"
                 },
                 legend: {

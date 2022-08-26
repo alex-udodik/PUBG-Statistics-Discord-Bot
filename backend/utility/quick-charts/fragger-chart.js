@@ -53,7 +53,7 @@ module.exports = {
             options: {
                 title: {
                     display: true,
-                    text: `${object.displayName} Fragger Rating Over Seasons`,
+                    text: `${object.displayName} Fragger Rating Over Seasons (${object.gameMode_})`,
                     fontColor: "#DCDCDC"
                 },
                 legend: {
