@@ -51,6 +51,7 @@ module.exports = {
             embed.setImage(url.url)
             embed.setColor(url.embedColor)
             embed.setDescription(url.description)
+            embed.setFooter("Graph generated with QuickCharts")
         }
 
         return {embeds: [embed]}
