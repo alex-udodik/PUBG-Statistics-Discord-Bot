@@ -6,4 +6,6 @@
 
 
 
+### Discord Bot Architecture
+![Screenshot](architecture.png)
 
