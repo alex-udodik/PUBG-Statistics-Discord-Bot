@@ -7,5 +7,5 @@
 
 
 ### Discord Bot Architecture
-![Screenshot](architecture.png)
+![Screenshot](design.png)
 
