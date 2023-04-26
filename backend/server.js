@@ -262,7 +262,7 @@ app.listen(port, function () {
     console.log(`Listening on port ${port}!`)
 });
 
-/*
+
 (async () => {
 
     var cache = CacheSingleton.getInstance();
@@ -273,9 +273,9 @@ app.listen(port, function () {
         await mongodb.connect();
 
         //listen to mongodb seasons for changes
-        mongo.watch("PUBG", generateLatestSeason)
+        //mongo.watch("PUBG", generateLatestSeason)
 
     } catch (error) {
         console.log("Error: ", error);
     }
-})();*/
+})();
