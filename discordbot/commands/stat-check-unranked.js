@@ -29,12 +29,12 @@ module.exports = {
                 .setName("game-mode")
                 .setDescription("Choose a game-mode")
                 .setRequired(true)
-                .addChoice("FPP Squad", "squad-fpp")
-                .addChoice("FPP Duo", "duo-fpp")
-                .addChoice("FPP Solo", "solo-fpp")
-                .addChoice("TPP Squad", "squad")
-                .addChoice("TPP Duo", "duo")
-                .addChoice("TPP Solo", "solo")
+                .addChoice("squad-fpp", "squad-fpp")
+                .addChoice("duo-fpp", "duo-fpp")
+                .addChoice("solo-fpp", "solo-fpp")
+                .addChoice("squad", "squad")
+                .addChoice("duo", "duo")
+                .addChoice("solo", "solo")
 
         )
         .addStringOption(option =>
