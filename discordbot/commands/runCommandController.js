@@ -6,6 +6,7 @@ const enums = require("../utility/global-enums");
 const seasonConverter = require("../utility/pubg/season-names-simplified");
 const constants = require("../utility/global-enums");
 const numberToWord = require("../utility/number-to-word");
+const nameSimplifier = require('../utility/pubg/season-names-simplified')
 
 module.exports = {
     async runCommand(interaction) {
@@ -17,10 +18,14 @@ module.exports = {
         else {
             const group = interaction.options._group;
             const shard = interaction.commandName.replace("stats-", "")
-            const season = interaction.options.getString("season")
             const gameMode = interaction.options.getString("game-mode")
             const names = interaction.options.getString("names").split(/[ ,]+/)
+            let season = interaction.options.getString("season")
+            season = await nameSimplifier.createSeasonName(shard, season, group);
 
+            if (season[0] === -1) {
+                return `Improper season value. Values are between 1 and ${season[1]}`;
+            }
 
             let ranked = false
 

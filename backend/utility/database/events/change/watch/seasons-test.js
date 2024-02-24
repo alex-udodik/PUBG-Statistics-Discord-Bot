@@ -4,12 +4,17 @@ module.exports = {
     watch(database, callback) {
 
         const collection = database.collection("Seasons-test");
-        let changeStream = collection.watch();
+        let watcher = collection.watch()
+            .on("change", next => {
+                console.log("received a change to the collection: \t", next.operationType, next.ns.db, next.ns.coll);
+                callback("test")
+            })
+            .on("error", e => {
+                console.error("Watcher died");
 
-        changeStream.on("change", next => {
-            console.log("received a change to the collection: \t", next.operationType, next.ns.db, next.ns.coll);
+                watcher.cursor.close();
 
-            callback("test");
-        });
+                watch(database, callback);
+            });
     }
 }

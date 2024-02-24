@@ -262,6 +262,7 @@ app.listen(port, function () {
     console.log(`Listening on port ${port}!`)
 });
 
+
 (async () => {
 
     var cache = CacheSingleton.getInstance();
