@@ -16,7 +16,7 @@ const BotAnalytics = require("./analytics/analytics");
 expressWs = expressWs(express());
 
 const app = expressWs.app;
-const port = 3000;
+const port = 2999;
 
 dotenv.config();
 
@@ -273,7 +273,7 @@ app.listen(port, function () {
         await mongodb.connect();
 
         //listen to mongodb seasons for changes
-        //mongo.watch("PUBG", generateLatestSeason)
+        mongo.watch("PUBG", generateLatestSeason)
 
     } catch (error) {
         console.log("Error: ", error);
