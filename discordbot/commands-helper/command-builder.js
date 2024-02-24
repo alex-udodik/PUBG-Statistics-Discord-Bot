@@ -23,6 +23,7 @@ module.exports = {
                         option.setDescription("The stats for this season will be queried")
                         option.setRequired(true)
 
+                        /*
                         const nameSimplifier = require('../utility/pubg/season-names-simplified')
                         for (var i = size - 1, j = seasons.length - 1; i >= 0 && j >= 0; j--){
                             var pair = nameSimplifier.getSimplifiedSeasonName(shard, seasons[j].id, false)
@@ -30,8 +31,8 @@ module.exports = {
                                 option.addChoice(pair.name, pair.seasonId)
                                 i--;
                             }
-                        }
-                        option.addChoice("Lifetime", "lifetime")
+                        }*/
+                        //option.addChoice("Lifetime", "lifetime")
                         return option
                     })
                     subCommand.addStringOption(option => option
@@ -111,6 +112,7 @@ module.exports = {
                         option.setRequired(true)
                         //TODO: proper season names.
 
+                        /*
                         const nameSimplifier = require('../utility/pubg/season-names-simplified')
                         for (var i = size - 1, j = seasons.length - 1; i >= 0 && j >= 0; j--){
                             var pair = nameSimplifier.getSimplifiedSeasonName(shard, seasons[j].id, true)
@@ -118,7 +120,7 @@ module.exports = {
                                 option.addChoice(pair.name, pair.seasonId)
                                 i--;
                             }
-                        }
+                        }*/
                         return option
                     })
                     subCommand.addStringOption(option => option
