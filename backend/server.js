@@ -16,7 +16,7 @@ const BotAnalytics = require("./analytics/analytics");
 expressWs = expressWs(express());
 
 const app = expressWs.app;
-const port = 2999;
+const port = 3000;
 
 dotenv.config();
 
