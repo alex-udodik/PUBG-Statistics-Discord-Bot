@@ -1,5 +1,6 @@
 const api = require('../utility/api')
-const {MessageEmbed, MessageAttachment} = require("discord.js");
+const {MessageEmbed} = require("discord.js");
+const imageDownloader = require('../utility/save-img.js')
 
 module.exports = {
 
@@ -41,20 +42,31 @@ module.exports = {
         }
 
         var embed = new MessageEmbed();
+        const imageName = `${names}${Date.now()}.png`;
+
         if (url.invalidAccounts.length > 0) {
             embed.setTitle(`Accounts failed fetch from API (DNE or missing upper/lower case)`)
             embed.setDescription(`\n\u2022${url.invalidAccounts[0].name}`)
             embed.setColor('#960018')
         }
         else {
+
+
+            if (await imageDownloader.download(url.url, './assets/temp/', imageName)) {
+
+            }
+
+            embed.setImage(`attachment:./assets/temp/${imageName}`)
             embed.setTitle(`${url.displayName}`)
-            embed.setImage(url.url)
+            //embed.setImage(url.url)
             embed.setColor(url.embedColor)
             embed.setDescription(url.description)
+            embed.setImage(`attachment://${imageName}`);
             embed.setFooter("Graph generated with QuickCharts")
         }
 
-        return {embeds: [embed]}
+
+        return {embeds: [embed], files: [`./assets/temp/${imageName}`]};
 
     }
 }
