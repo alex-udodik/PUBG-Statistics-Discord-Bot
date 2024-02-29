@@ -53,12 +53,11 @@ module.exports = {
 
 
             if (await imageDownloader.download(url.url, './assets/temp/', imageName)) {
-
+                embed.setImage(`attachment:./assets/temp/${imageName}`)
             }
 
-            embed.setImage(`attachment:./assets/temp/${imageName}`)
+
             embed.setTitle(`${url.displayName}`)
-            //embed.setImage(url.url)
             embed.setColor(url.embedColor)
             embed.setDescription(url.description)
             embed.setImage(`attachment://${imageName}`);
