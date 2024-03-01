@@ -28,7 +28,7 @@ module.exports = {
         //TODO add player name verification
 
         if (names.length > 1) {
-            return "Exceeded number of names for unranked (Max 10)"
+            return "Only 1 player name is allowed for graph."
         }
         if (group === "ranked") {
             ranked = true
