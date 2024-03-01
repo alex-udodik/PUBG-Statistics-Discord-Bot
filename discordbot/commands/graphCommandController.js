@@ -25,6 +25,8 @@ module.exports = {
             date: interaction.createdAt,
         }
 
+        //TODO add player name verification
+
         if (names.length > 1) {
             return "Exceeded number of names for unranked (Max 10)"
         }
@@ -48,6 +50,9 @@ module.exports = {
             embed.setTitle(`Accounts failed fetch from API (DNE or missing upper/lower case)`)
             embed.setDescription(`\n\u2022${url.invalidAccounts[0].name}`)
             embed.setColor('#960018')
+
+            //TODO check if file exists then return, else return error
+            return {embeds: [embed]};
         }
         else {
 
@@ -62,10 +67,12 @@ module.exports = {
             embed.setDescription(url.description)
             embed.setImage(`attachment://${imageName}`);
             embed.setFooter("Graph generated with QuickCharts")
+
+            //TODO check if file exists then return, else return error
+            return {embeds: [embed], files: [`./assets/temp/${imageName}`]};
         }
 
 
-        return {embeds: [embed], files: [`./assets/temp/${imageName}`]};
 
     }
 }
