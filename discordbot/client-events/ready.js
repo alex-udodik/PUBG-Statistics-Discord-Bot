@@ -15,6 +15,8 @@ module.exports = {
 
         const clientId = process.env.CLIENT_ID;
 
+        //TODO: guild command sync with mongodb
+
         console.log("Bot is online.");
 
         const rest = new REST({version: '9'}).setToken(process.env.BOT_TOKEN);

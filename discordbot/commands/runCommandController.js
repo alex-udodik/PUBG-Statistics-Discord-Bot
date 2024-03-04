@@ -11,6 +11,8 @@ const nameSimplifier = require('../utility/pubg/season-names-simplified')
 module.exports = {
     async runCommand(interaction) {
 
+
+        //TODO: name verification
         if (interaction.options._subcommand.includes("graph")) {
             const graphCommandController = require('../commands/graphCommandController')
             return await graphCommandController.runCommand(interaction)
