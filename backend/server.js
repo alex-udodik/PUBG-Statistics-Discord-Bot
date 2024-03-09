@@ -273,7 +273,7 @@ app.listen(port, function () {
         await mongodb.connect();
 
         //listen to mongodb seasons for changes
-        mongo.watch("PUBG", generateLatestSeason)
+        //mongo.watch("PUBG", generateLatestSeason)
 
     } catch (error) {
         console.log("Error: ", error);

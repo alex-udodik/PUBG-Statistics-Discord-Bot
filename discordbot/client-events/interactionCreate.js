@@ -1,4 +1,6 @@
 
+const folderDeletion = require('../utility/folder-deletion');
+
 module.exports = {
     async execute(interaction, client) {
         if (!interaction.isCommand()) return;
@@ -18,5 +20,10 @@ module.exports = {
                 ephemeral: true
             });
         }
+
+
+        //TODO: clear /assets/temp/ folder
+        folderDeletion.clearFolder("../assets/temp/");
+
     }
 }

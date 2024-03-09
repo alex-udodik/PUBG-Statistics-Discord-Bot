@@ -25,8 +25,6 @@ module.exports = {
             date: interaction.createdAt,
         }
 
-        //TODO add player name verification
-
         if (names.length > 1) {
             return "Only 1 player name is allowed for graph."
         }
@@ -51,7 +49,6 @@ module.exports = {
             embed.setDescription(`\n\u2022${url.invalidAccounts[0].name}`)
             embed.setColor('#960018')
 
-            //TODO check if file exists then return, else return error
             return {embeds: [embed]};
         }
         else {

@@ -185,7 +185,6 @@ getStatsFromApi = async (obj, ignoreRateLimit) => {
     console.log(url);
 
     if ('errors' in results) {
-        //TODO: return object and error details
         return {APIError: true, details: "Fetching stats"}
     } else {
         var documents = [];
