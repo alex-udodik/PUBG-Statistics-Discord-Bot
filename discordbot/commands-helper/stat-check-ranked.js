@@ -1,8 +1,8 @@
 const {SlashCommandBuilder} = require('@discordjs/builders');
 const {MessageEmbed, MessageAttachment} = require('discord.js');
 const api = require('../utility/api');
-const statsParser = require('../commands-helper/stats-parser');
-const rankedIconGetter = require('../commands-helper/ranked-icon-getter');
+const statsParser = require('./stats-parser');
+const rankedIconGetter = require('./ranked-icon-getter');
 
 module.exports = {
     data: new SlashCommandBuilder()

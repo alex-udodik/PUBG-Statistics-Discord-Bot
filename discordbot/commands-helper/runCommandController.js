@@ -1,7 +1,7 @@
 const api = require("../utility/api");
-const statsParser = require("../commands-helper/stats-parser");
+const statsParser = require("./stats-parser");
 const {MessageEmbed, MessageAttachment} = require("discord.js");
-const rankedIconGetter = require("../commands-helper/ranked-icon-getter");
+const rankedIconGetter = require("./ranked-icon-getter");
 const enums = require("../utility/global-enums");
 const seasonConverter = require("../utility/pubg/season-names-simplified");
 const constants = require("../utility/global-enums");
@@ -13,7 +13,7 @@ module.exports = {
 
 
         if (interaction.options._subcommand.includes("graph")) {
-            const graphCommandController = require('../commands/graphCommandController')
+            const graphCommandController = require('./graphCommandController')
             return await graphCommandController.runCommand(interaction)
         }
         else {

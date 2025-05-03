@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const api = require('../utility/api');
-const factory = require('../commands-helper/seasons-embed-factory');
+const factory = require('./seasons-embed-factory');
 
 module.exports = {
     data: new SlashCommandBuilder()

@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const api = require('../utility/api');
-const statsParser = require('../commands-helper/stats-parser');
+const statsParser = require('./stats-parser');
 
 module.exports = {
     data: new SlashCommandBuilder()
