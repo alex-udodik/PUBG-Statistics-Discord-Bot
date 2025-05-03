@@ -34,7 +34,7 @@ module.exports = {
 
         const url = await api.fetchData(
             `http://localhost:3000/api/graph/${statType}/shard/${shard}/gameMode/${gameMode}/ranked/${ranked}/players?array=${names}`,
-            180000,  payload, "POST"
+            1000000,  payload, "POST"
         )
 
         if (url.statusCode !== 200) {
